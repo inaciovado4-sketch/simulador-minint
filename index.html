@@ -1,0 +1,2223 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Simulador Oficial MININT Angola | Concurso Público</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        minintNavy: '#071426',
+                        minintBlue: '#0D213D',
+                        minintRed: '#8B1E24',
+                        minintGold: '#D4AF37',
+                        minintLight: '#F8FAFC'
+                    }
+                }
+            }
+        };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        html, body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-text-size-adjust: 100%;
+            touch-action: pan-x pan-y;
+            overscroll-behavior-y: contain;
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+        .mono-font { font-family: 'JetBrains Mono', monospace; }
+
+        input, select, textarea {
+            font-size: 16px !important;
+        }
+        @media (min-width: 640px) {
+            input, select, textarea {
+                font-size: 14px !important;
+            }
+        }
+
+        button, a, select, input, [role="button"], .interactive-card {
+            touch-action: manipulation;
+            transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+        }
+        button:active, a:active, [role="button"]:active, .interactive-card:active {
+            transform: scale(0.968);
+        }
+        .view-fade {
+            animation: viewFadeIn 0.22s ease-out;
+        }
+        @keyframes viewFadeIn {
+            from { opacity: 0; transform: translateY(4px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .touch-ripple {
+            position: fixed;
+            width: 24px;
+            height: 24px;
+            border-radius: 9999px;
+            background: rgba(212, 175, 55, 0.38);
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0.3);
+            animation: rippleExpand 0.42s ease-out forwards;
+            z-index: 9999;
+        }
+        @keyframes rippleExpand {
+            to { opacity: 0; transform: translate(-50%, -50%) scale(2.6); }
+        }
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; }
+        }
+    </style>
+</head>
+<body class="bg-minintLight text-slate-800 min-h-screen flex flex-col pb-24 select-none">
+
+    <!-- NOTIFICAÇÃO FLUTUANTE -->
+    <div id="toast-box" class="fixed top-20 right-3 left-3 sm:left-auto z-50 max-w-sm sm:w-full hidden no-print pointer-events-none">
+        <div id="toast-card" class="bg-minintNavy text-white border border-amber-400/70 rounded-xl shadow-2xl p-3.5 flex items-start justify-between gap-3 pointer-events-auto">
+            <div id="toast-msg" class="text-xs font-semibold leading-relaxed"></div>
+            <button type="button" onclick="fecharToast()" class="text-slate-300 hover:text-white font-bold text-sm leading-none px-1">✕</button>
+        </div>
+    </div>
+
+    <!-- CABEÇALHO INSTITUCIONAL -->
+    <header class="bg-[#071426] border-b border-amber-400/30 text-white sticky top-0 z-40 shadow-lg no-print">
+        <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+            <div class="flex items-center space-x-3 cursor-pointer select-none relative" id="brasao-secreto" role="button" tabindex="0">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-amber-400 via-amber-600 to-amber-800 flex items-center justify-center p-0.5 shadow-lg">
+                    <div class="w-full h-full bg-[#071426] rounded-[10px] flex items-center justify-center border border-amber-400/50">
+                        <svg class="w-6 h-6 text-amber-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                            <path d="M12 2L3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-9-5z" fill="#071426" stroke="#D4AF37"/>
+                            <path d="M12 7l1.45 2.94 3.25.47-2.35 2.29.55 3.24L12 14.4l-2.9 1.54.55-3.24-2.35-2.29 3.25-.47L12 7z" fill="#D4AF37" stroke="none"/>
+                        </svg>
+                    </div>
+                </div>
+                <div>
+                    <div class="text-[10px] tracking-widest text-slate-300 font-semibold uppercase">REPÚBLICA DE ANGOLA</div>
+                    <div class="text-sm md:text-base font-extrabold tracking-tight text-white">Ministério do Interior</div>
+                </div>
+                <span id="badge-pedidos-brasao" class="hidden -top-1 -right-2 bg-red-600 text-white text-[10px] font-extrabold px-1.5 py-0.5 rounded-full shadow">0</span>
+            </div>
+
+            <div class="flex items-center space-x-1.5 sm:space-x-2">
+                <button type="button" onclick="irPara('partilhar')" class="bg-amber-500 hover:bg-amber-600 text-minintNavy text-xs font-bold px-3 py-2 rounded-lg shadow">
+                    Partilhar
+                </button>
+                <button type="button" onclick="abrirModalSuporte()" class="bg-minintRed hover:bg-red-800 text-white text-xs font-bold px-3 py-2 rounded-lg shadow">
+                    VIP <span class="valor-vip-curto">1.000 Kz</span>
+                </button>
+            </div>
+        </div>
+        <div class="flex h-1.5 w-full">
+            <div class="bg-[#C8102E] w-2/5"></div>
+            <div class="bg-[#000000] w-2/5"></div>
+            <div class="bg-[#D4AF37] w-1/5"></div>
+        </div>
+    </header>
+
+    <!-- BANNER OFICIAL -->
+    <div id="banner-oficial" class="w-full bg-[#071426] border-b border-slate-800 no-print">
+        <div class="max-w-5xl mx-auto py-2.5 px-4">
+            <img
+                id="img-banner-oficial"
+                src="GEM_PHOTO_272D314B-DF31-4A0C-AD07-F028E196D504_L0_001_recent_photo_A09A878C-3FA1-4608-BBB9-905E5A3059DE.jpg"
+                onerror="this.onerror=null;this.src='https://placehold.co/1200x320/071426/D4AF37?text=SIMULADOR+OFICIAL+MININT+ANGOLA+-+CONCURSO+PUBLICO';"
+                alt="Ministério do Interior"
+                class="w-full h-auto max-h-64 rounded-xl shadow-xl border border-slate-700/50 object-cover"
+            >
+        </div>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main class="flex-grow max-w-7xl mx-auto w-full p-4 md:p-6 space-y-6">
+
+        <!-- 1. ECRÃ INICIAL (ACESSO WHATSAPP + ADESÃO VIP 1.000 KZ + TESTES DIÁRIOS) -->
+        <div id="view-inicio" class="view-fade grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+            <!-- Coluna Esquerda: Acesso Candidato via WhatsApp -->
+            <div class="lg:col-span-6 bg-white rounded-2xl shadow-lg border border-slate-200 overflow-hidden">
+                <div class="bg-gradient-to-r from-minintNavy to-minintBlue p-5 text-white">
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] bg-emerald-500/20 text-emerald-300 font-mono px-2.5 py-0.5 rounded border border-emerald-400/30 uppercase font-bold">1.º Teste Grátis • Envio via WhatsApp</span>
+                        <span class="text-[10px] text-slate-300 font-mono">MININT 2026</span>
+                    </div>
+                    <h2 class="text-lg font-extrabold mt-2">Acesso do Candidato</h2>
+                    <p class="text-xs text-slate-200 mt-1 leading-relaxed">
+                        Solicite o seu código gratuito e aguarde o envio do código pelo Administrador no seu <strong>WhatsApp</strong>. Insira apenas números com WhatsApp ativo.
+                    </p>
+                </div>
+
+                <div class="p-5 space-y-4">
+                    <div id="banner-indicacao-recebida" class="hidden bg-emerald-50 border border-emerald-300 text-emerald-900 p-3 rounded-xl text-xs font-semibold">
+                        Entrou através do convite de um amigo (<span id="indicador-tel-label" class="mono-font font-bold"></span>).
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Nome Completo</label>
+                        <input type="text" id="reg-nome" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-minintBlue focus:outline-none select-text" placeholder="Ex: António Manuel dos Santos">
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Número de WhatsApp (9 dígitos)</label>
+                            <input type="tel" id="reg-tel" maxlength="12" class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-minintBlue focus:outline-none mono-font select-text" placeholder="923 000 000">
+                            <span class="text-[10px] text-slate-500 font-medium block mt-1">Apenas números com WhatsApp ativo.</span>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 uppercase mb-1">Carreira</label>
+                            <select id="reg-carreira" class="w-full px-3 py-2.5 rounded-lg border border-slate-300 text-sm bg-white focus:ring-2 focus:ring-minintBlue focus:outline-none font-semibold text-minintNavy">
+                                <option value="PNA">Polícia Nacional (PNA)</option>
+                                <option value="SIC">Investigação Criminal (SIC)</option>
+                                <option value="SME">Migração e Estrangeiros (SME)</option>
+                                <option value="SPCB">Proteção Civil e Bombeiros (SPCB)</option>
+                                <option value="SP">Serviço Penitenciário (SP)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button type="button" id="btn-solicitar-codigo" onclick="solicitarCodigoWhatsApp()" class="w-full bg-minintNavy hover:bg-minintBlue text-white font-extrabold py-3.5 rounded-xl text-xs shadow transition uppercase tracking-wider">
+                        Solicitar Código Gratuito via WhatsApp
+                    </button>
+
+                    <!-- CAIXA DE VALIDAÇÃO LOGO ABAIXO DO BOTÃO -->
+                    <div id="caixa-codigo-abaixo" class="hidden bg-slate-50 p-4 rounded-xl border-2 border-emerald-500 space-y-3 mt-3">
+                        <div class="flex items-center justify-between text-xs">
+                            <span class="font-extrabold text-minintNavy uppercase">Enviado ao Administrador</span>
+                            <span id="codigo-tentativas-info" class="font-mono font-bold text-minintRed">Tentativas: 4/4</span>
+                        </div>
+                        <div id="mensagem-status-whatsapp" class="text-xs bg-emerald-50 border border-emerald-200 text-emerald-950 px-3.5 py-2.5 rounded-lg leading-relaxed">
+                            Pedido <strong>Enviado</strong> com sucesso. <strong>Aguarde o código gratuito no seu WhatsApp (<span id="tel-aguardando-label" class="mono-font font-bold"></span>)</strong> enviado pelo Administrador e introduza-o abaixo para iniciar o seu 1.º teste gratuito.
+                        </div>
+                        <div class="flex space-x-2">
+                            <input type="text" id="input-codigo-candidato" maxlength="4" inputmode="numeric" class="flex-grow px-3 py-2.5 rounded-lg border border-slate-300 text-center text-base font-bold mono-font tracking-widest focus:ring-2 focus:ring-minintBlue focus:outline-none select-text" placeholder="0000">
+                            <button type="button" onclick="validarCodigoCandidato()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-lg text-xs shadow">
+                                Confirmar
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Coluna Direita: VIP 1.000,00 Kz & Testes Diários 24h (200,00 Kz) -->
+            <div class="lg:col-span-6 space-y-5">
+                <div class="bg-white rounded-2xl shadow-lg border border-amber-300 overflow-hidden">
+                    <div class="bg-gradient-to-r from-amber-600 to-amber-700 p-5 text-white">
+                        <span class="text-[10px] bg-white/20 text-white font-mono px-2.5 py-0.5 rounded uppercase font-bold">Acesso Ilimitado</span>
+                        <h2 class="text-lg font-extrabold mt-2">Adesão VIP — <span class="valor-vip-texto">1.000,00 Kz</span></h2>
+                        <p class="text-xs text-amber-100 mt-1">Simulados ilimitados e acesso total aos Tópicos, Glossário e Materiais.</p>
+                    </div>
+                    <div class="p-5 space-y-4">
+                        <div class="bg-amber-50 border border-amber-200 rounded-xl p-4 space-y-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-extrabold text-amber-900 uppercase">Multicaixa Express</span>
+                                <span class="text-sm font-extrabold text-minintRed mono-font valor-vip-texto">1.000,00 Kz</span>
+                            </div>
+                            <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-amber-200">
+                                <div>
+                                    <span class="block text-[10px] text-slate-500 uppercase font-bold">Número Express</span>
+                                    <span class="text-base font-extrabold mono-font text-minintNavy">936 813 444</span>
+                                </div>
+                                <button type="button" id="btn-copiar-express" onclick="copiarExpress(this)" class="bg-minintNavy hover:bg-minintBlue text-white text-xs px-3.5 py-2 rounded-lg font-bold">
+                                    Copiar
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <label class="block text-xs font-extrabold text-slate-800 uppercase">Código VIP (Pago ou VIP Gratuito por Indicação)</label>
+                            <div class="flex space-x-2">
+                                <input type="text" id="input-codigo-vip" class="flex-grow px-3.5 py-2.5 rounded-lg border border-slate-300 text-xs mono-font uppercase focus:ring-2 focus:ring-minintBlue focus:outline-none select-text" placeholder="Ex: MININT-9230-2026 ou VIPFREE-...">
+                                <button type="button" onclick="ativarVipManual()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2.5 rounded-lg text-xs shadow">
+                                    Ativar VIP
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="aviso-aguardando-admin" class="hidden bg-amber-100 border border-amber-400 text-amber-950 p-3.5 rounded-xl text-xs space-y-1">
+                            <div class="font-extrabold uppercase text-minintRed">Aguardando Confirmação do Administrador</div>
+                            <div>O seu código VIP gratuito foi registado para o VMI. Assim que for confirmado, o acesso VIP será libertado.</div>
+                        </div>
+
+                        <button type="button" onclick="abrirWhatsAppSuporte()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 rounded-xl text-xs font-bold shadow">
+                            Enviar Comprovativo WhatsApp (951 338 835)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Testes Diários 24h (200,00 Kz) + Envio de Recibo -->
+                <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-extrabold uppercase text-minintNavy">Testes Diários 24h — 200,00 Kz</span>
+                        <span class="text-[11px] font-mono font-bold text-emerald-700">Express: 936 813 444</span>
+                    </div>
+                    <p class="text-xs text-slate-600 leading-relaxed">Anexe o comprovativo de <strong>200,00 Kz</strong> para o VMI liberar os Testes Diários no portal por 24h com notificação imediata.</p>
+                    <div class="flex items-center gap-2">
+                        <label for="input-recibo-24h" class="flex-1 min-w-0 flex items-center justify-between gap-2 px-3 py-2 rounded-xl border border-slate-300 bg-slate-50 text-xs cursor-pointer">
+                            <span id="label-ficheiro-24h" class="truncate font-semibold text-slate-700">Sem ficheiro</span>
+                            <span class="shrink-0 bg-white border border-slate-300 text-minintNavy font-bold px-2.5 py-1 rounded-lg text-[11px]">Escolher</span>
+                        </label>
+                        <input type="file" id="input-recibo-24h" accept="image/*,application/pdf" class="sr-only" onchange="atualizarNomeFicheiro24h(this)">
+                        <button type="button" id="btn-enviar-recibo-24h" onclick="enviarRecibo24h(this)" class="shrink-0 bg-minintNavy hover:bg-minintBlue text-white px-3.5 py-2.5 rounded-xl text-xs font-bold">
+                            Enviar
+                        </button>
+                    </div>
+                    <div id="status-recibo-24h" class="text-xs font-semibold text-amber-800"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PAINEL DO SIMULADO -->
+        <div id="view-painel-simulado" class="view-fade hidden space-y-6">
+            <div class="bg-gradient-to-r from-minintNavy to-minintBlue rounded-2xl p-6 text-white shadow-lg flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span id="badge-conta" class="bg-amber-400 text-minintNavy text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full">1.º Teste Grátis</span>
+                        <span id="badge-carreira" class="text-xs font-mono text-minintGold">Carreira: PNA</span>
+                    </div>
+                    <h2 id="painel-nome-cand" class="text-xl font-extrabold mt-2">Candidato</h2>
+                    <p id="painel-status-indicacao" class="text-xs text-emerald-300 mt-1"></p>
+                </div>
+                <button type="button" onclick="terminarSessao()" class="bg-minintRed hover:bg-red-800 text-white px-4 py-2 rounded-xl text-xs font-bold">
+                    Sair
+                </button>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-5">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1.5">Nível</label>
+                        <select id="sel-nivel" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm font-bold bg-white">
+                            <option value="Fácil">Fácil</option>
+                            <option value="Médio" selected>Médio</option>
+                            <option value="Difícil">Difícil</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-extrabold text-slate-700 uppercase mb-1.5">Quantidade de Questões</label>
+                        <select id="sel-qtd" class="w-full px-4 py-3 rounded-xl border border-slate-300 text-sm font-bold bg-white">
+                            <option value="20">20 Questões (15 min)</option>
+                            <option value="40" selected>40 Questões (30 min)</option>
+                            <option value="50">50 Questões (45 min)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button type="button" onclick="comecarSimulado()" class="w-full bg-minintNavy hover:bg-minintBlue text-white font-extrabold py-3.5 rounded-xl text-sm shadow-lg uppercase tracking-wider">
+                    Iniciar Simulado Agora
+                </button>
+            </div>
+        </div>
+
+        <!-- 3. FEED -->
+        <div id="view-feed" class="view-fade hidden space-y-4">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+                <span class="text-[10px] font-bold uppercase text-minintRed">Notícias & Comunicados • Sempre Ativo</span>
+                <h2 class="text-lg font-extrabold text-minintNavy">Feed Oficial MININT 2026</h2>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2 interactive-card">
+                <span class="text-[10px] font-bold bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded uppercase">Programa Convide 3 Amigos</span>
+                <h3 class="text-sm font-extrabold text-minintNavy">Ganhe Testes Extra ou Acesso VIP Gratuito!</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">Partilhe o seu link exclusivo com amigos: quando <strong>3 amigos entrarem</strong> pelo seu link, ganha +1 teste gratuito; quando os <strong>3 amigos pagarem o VIP (1.000,00 Kz)</strong>, ganha um Código VIP Gratuito sujeito à confirmação do Administrador.</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-2 interactive-card">
+                <span class="text-[10px] font-bold bg-amber-100 text-amber-900 px-2.5 py-0.5 rounded uppercase">Preparação Concurso</span>
+                <h3 class="text-sm font-extrabold text-minintNavy">Conteúdos Programáticos Atualizados</h3>
+                <p class="text-xs text-slate-600 leading-relaxed">Estude História de Angola (Rainha Njinga e período pré e pós-colonial), Constituição (CRA), Administração Pública, Orgânica do MININT e Patriotismo.</p>
+            </div>
+        </div>
+
+        <!-- 4. CHAT COM O ADMINISTRADOR -->
+        <div id="view-chat" class="view-fade hidden max-w-2xl mx-auto">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-lg overflow-hidden">
+                <div class="bg-minintNavy p-4 text-white flex justify-between items-center">
+                    <div>
+                        <h2 class="text-sm font-extrabold">Chat Direto com o Administrador (VMI)</h2>
+                        <span class="text-[11px] text-emerald-300">Sempre Ativo • Pedidos de Código & Suporte</span>
+                    </div>
+                    <span class="text-[10px] bg-emerald-500/20 text-emerald-300 px-2.5 py-1 rounded font-mono">ONLINE</span>
+                </div>
+                <div id="chat-mensagens" class="p-4 space-y-3 max-h-80 overflow-y-auto bg-slate-50 text-xs">
+                    <div class="bg-white border border-slate-200 p-3 rounded-xl max-w-[85%]">
+                        <div class="font-bold text-minintNavy mb-1">Administrador MININT (VMI)</div>
+                        <div class="text-slate-700">Olá! Os pedidos de código gratuito são recebidos automaticamente aqui e enviados para o seu WhatsApp. Também pode enviar dúvidas ou comprovativos por aqui.</div>
+                    </div>
+                </div>
+                <div class="p-3 border-t bg-white flex space-x-2">
+                    <input type="text" id="input-chat-msg" onkeydown="if(event.key==='Enter') enviarMensagemChat()" class="flex-grow px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-minintBlue focus:outline-none select-text" placeholder="Escreva a sua mensagem para o administrador...">
+                    <button type="button" id="btn-chat-enviar" onclick="enviarMensagemChat(this)" class="bg-minintNavy hover:bg-minintBlue text-white px-4 py-2.5 rounded-xl text-xs font-bold">
+                        Enviar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. TÓPICOS -->
+        <div id="view-topicos" class="view-fade hidden space-y-5">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                    <span class="text-[10px] font-bold uppercase text-emerald-600">Prática por Matéria</span>
+                    <h2 class="text-lg font-extrabold text-minintNavy">Tópicos de Estudo</h2>
+                </div>
+                <span id="status-acesso-topicos" class="text-[11px] font-bold bg-amber-100 text-amber-900 px-3 py-1 rounded-full">1 Consulta Gratuita Disponível</span>
+            </div>
+            <div id="grid-topicos" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </div>
+
+        <!-- 6. GLOSSÁRIO -->
+        <div id="view-glossario" class="view-fade hidden space-y-5">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                    <div>
+                        <span class="text-[10px] font-bold uppercase text-minintRed">Termos Técnicos</span>
+                        <h2 class="text-lg font-extrabold text-minintNavy">Glossário MININT & Direito</h2>
+                    </div>
+                    <span id="status-acesso-glossario" class="text-[11px] font-bold bg-amber-100 text-amber-900 px-3 py-1 rounded-full">1 Consulta Gratuita Disponível</span>
+                </div>
+                <input type="text" id="busca-glossario" oninput="renderizarGlossario()" class="w-full px-4 py-2.5 rounded-xl border border-slate-300 text-xs focus:ring-2 focus:ring-minintBlue focus:outline-none select-text" placeholder="Pesquisar termo (ex: Habeas Corpus, Legalidade, PNA)...">
+            </div>
+            <div id="lista-glossario" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+        </div>
+
+        <!-- 7. MATERIAIS -->
+        <div id="view-materiais" class="view-fade hidden space-y-5">
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div>
+                    <span class="text-[10px] font-bold uppercase text-minintBlue">Conteúdo Programático</span>
+                    <h2 class="text-lg font-extrabold text-minintNavy">Materiais de Estudo</h2>
+                </div>
+                <span id="status-acesso-materiais" class="text-[11px] font-bold bg-amber-100 text-amber-900 px-3 py-1 rounded-full">1 Consulta Gratuita Disponível</span>
+            </div>
+            <div id="lista-materiais" class="space-y-4"></div>
+        </div>
+
+        <!-- 8. PARTILHAR & CONVITES DE 3 AMIGOS -->
+        <div id="view-partilhar" class="view-fade hidden max-w-2xl mx-auto space-y-5">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg space-y-5">
+                <div class="text-center space-y-2">
+                    <span class="text-[10px] bg-emerald-100 text-emerald-900 font-bold px-3 py-1 rounded-full uppercase">Recompensa por Partilha</span>
+                    <h2 class="text-xl font-extrabold text-minintNavy">Partilhe o Seu Link com Amigos</h2>
+                    <p class="text-xs text-slate-600 leading-relaxed">
+                        • Se <strong>3 amigos entrarem</strong> pelo seu link partilhado, ganha <strong>+1 acesso gratuito</strong>.<br>
+                        • Se os <strong>3 amigos pagarem o acesso VIP (<span class="valor-vip-texto">1.000,00 Kz</span>)</strong>, recebe um <strong>Código VIP Gratuito</strong> (sujeito à confirmação do Administrador).
+                    </p>
+                </div>
+
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
+                    <div class="flex justify-between text-xs font-bold">
+                        <span>Amigos que entraram pelo seu link:</span>
+                        <span id="stat-amigos-entraram" class="mono-font text-minintBlue">0 / 3</span>
+                    </div>
+                    <div class="flex justify-between text-xs font-bold">
+                        <span>Amigos que pagaram VIP:</span>
+                        <span id="stat-amigos-pagaram" class="mono-font text-emerald-700">0 / 3</span>
+                    </div>
+                </div>
+
+                <div class="flex space-x-2">
+                    <input type="text" id="campo-link-partilha" readonly class="flex-grow px-3 py-2.5 rounded-lg border border-slate-300 text-xs mono-font bg-slate-50 select-text">
+                    <button type="button" id="btn-copiar-link" onclick="copiarLinkSeguro(this)" class="bg-minintNavy hover:bg-minintBlue text-white px-4 py-2.5 rounded-lg text-xs font-bold">
+                        Copiar
+                    </button>
+                </div>
+
+                <button type="button" onclick="partilharWhatsAppDireto()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-bold shadow">
+                    Partilhar Link no WhatsApp
+                </button>
+            </div>
+        </div>
+
+        <!-- 9. EXAME CRONOMETRADO -->
+        <div id="view-exame" class="view-fade hidden max-w-4xl mx-auto space-y-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center sticky top-16 z-30">
+                <div>
+                    <span id="exame-subtitulo" class="text-[11px] font-bold text-minintRed uppercase block">Simulado</span>
+                    <span id="exame-contador-q" class="text-sm font-extrabold text-minintNavy">Questão 1 de 20</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div id="exame-relogio" class="bg-minintNavy text-minintGold px-3.5 py-2 rounded-lg mono-font font-bold text-xs">15:00</div>
+                    <button type="button" onclick="concluirExame()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-bold">
+                        Concluir
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg space-y-5">
+                <div id="exame-enunciado" class="text-base font-bold text-slate-900 leading-relaxed"></div>
+                <div id="exame-alternativas" class="space-y-2.5"></div>
+                <div class="flex justify-between pt-4 border-t">
+                    <button type="button" onclick="mudarQuestao(-1)" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-bold text-slate-700">← Anterior</button>
+                    <button type="button" onclick="mudarQuestao(1)" class="px-5 py-2 bg-minintNavy text-white rounded-lg text-xs font-bold">Seguinte →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 10. ESTUDO POR DISCIPLINA NOS TÓPICOS -->
+        <div id="view-estudo-disc" class="view-fade hidden max-w-4xl mx-auto space-y-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center">
+                <div>
+                    <span id="estudo-disc-nome" class="text-xs font-extrabold text-emerald-700 uppercase block">Disciplina</span>
+                    <span id="estudo-disc-prog" class="text-xs text-slate-500">Pergunta 1</span>
+                </div>
+                <button type="button" onclick="irPara('topicos')" class="bg-slate-200 text-slate-800 px-3.5 py-2 rounded-lg text-xs font-bold">
+                    Voltar
+                </button>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg space-y-4">
+                <div id="estudo-disc-pergunta" class="text-base font-bold text-slate-900"></div>
+                <div id="estudo-disc-opcoes" class="space-y-2.5"></div>
+                <div id="estudo-disc-explicacao" class="hidden p-4 rounded-xl border text-xs"></div>
+                <div class="flex justify-between pt-4 border-t">
+                    <button type="button" onclick="navegarEstudo(-1)" class="px-4 py-2 border border-slate-300 rounded-lg text-xs font-bold">← Anterior</button>
+                    <button type="button" onclick="navegarEstudo(1)" class="px-5 py-2 bg-emerald-600 text-white rounded-lg text-xs font-bold">Próxima →</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 11. RESULTADO + INFORMAÇÃO DE PARTILHA COM 3 AMIGOS (CONTAGEM 1 MINUTO) -->
+        <div id="view-resultado" class="view-fade hidden max-w-3xl mx-auto space-y-4">
+            <div id="aviso-fim-gratuito" class="hidden bg-minintNavy text-white p-5 rounded-2xl shadow-xl border-2 border-amber-400 space-y-3">
+                <div class="flex justify-between items-start gap-3">
+                    <div>
+                        <span class="bg-amber-400 text-minintNavy text-[10px] font-extrabold px-2.5 py-0.5 rounded uppercase">Teste Gratuito Concluído</span>
+                        <h3 class="text-base font-extrabold mt-1">Quer mais acessos gratuitos ou VIP Grátis?</h3>
+                    </div>
+                    <div class="bg-minintRed px-3 py-1.5 rounded-xl text-center min-w-[72px]">
+                        <span class="text-[9px] text-amber-200 block uppercase">Início</span>
+                        <span id="contagem-regressiva" class="text-lg font-extrabold mono-font">60s</span>
+                    </div>
+                </div>
+                <p class="text-xs text-slate-200 leading-relaxed">
+                    Partilhe o seu link com amigos: se <strong>3 amigos entrarem</strong> pelo seu link partilhado, terá <strong>mais 1 acesso gratuito</strong>! Caso os <strong>3 amigos pagarem o acesso VIP (<span class="valor-vip-texto">1.000,00 Kz</span>)</strong>, terá <strong>acesso VIP gratuito</strong> com confirmação do Administrador.
+                </p>
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" onclick="partilharWhatsAppDireto()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold">
+                        Partilhar com Amigos no WhatsApp
+                    </button>
+                    <button type="button" onclick="irPara('inicio')" class="bg-amber-400 text-minintNavy px-4 py-2 rounded-xl text-xs font-bold">
+                        Ativar VIP (1.000 Kz)
+                    </button>
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-lg space-y-5">
+                <div class="text-center border-b pb-4">
+                    <h2 class="text-xl font-extrabold text-minintNavy">Boletim de Resultado</h2>
+                    <p id="res-sub" class="text-xs text-slate-500 mt-1"></p>
+                </div>
+                <div class="grid grid-cols-3 gap-3 text-center">
+                    <div class="bg-slate-50 p-3.5 rounded-xl border">
+                        <span class="text-[10px] text-slate-400 uppercase block font-bold">Média</span>
+                        <span id="res-media" class="text-xl font-extrabold text-minintNavy mono-font">0.0</span>
+                    </div>
+                    <div class="bg-slate-50 p-3.5 rounded-xl border">
+                        <span class="text-[10px] text-slate-400 uppercase block font-bold">Acertos</span>
+                        <span id="res-acertos" class="text-xl font-extrabold text-minintBlue mono-font">0/0</span>
+                    </div>
+                    <div class="bg-slate-50 p-3.5 rounded-xl border">
+                        <span class="text-[10px] text-slate-400 uppercase block font-bold">Estado</span>
+                        <span id="res-estado" class="text-lg font-extrabold">APTO</span>
+                    </div>
+                </div>
+                <div id="res-detalhes" class="space-y-2.5 max-h-72 overflow-y-auto"></div>
+                <button type="button" onclick="irPara('painel-simulado')" class="w-full bg-minintNavy text-white py-3 rounded-xl text-xs font-bold">
+                    Voltar ao Painel
+                </button>
+            </div>
+        </div>
+
+        <!-- 12. PAINEL DO ADMINISTRADOR VMI (PROTEGIDO POR PALAVRA-PASSE vado1234) -->
+        <div id="view-admin" class="view-fade hidden space-y-5">
+            <div class="bg-minintNavy p-5 rounded-2xl text-white flex flex-wrap justify-between items-center gap-3">
+                <div>
+                    <span class="bg-minintGold text-minintNavy text-[10px] font-extrabold px-2 py-0.5 rounded uppercase">Administração Protegida</span>
+                    <h2 class="text-lg font-extrabold mt-1">Painel Mestre — VMI</h2>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="ativarNotificacoesPushAdmin()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-bold">
+                        Testar 3 Vibrações
+                    </button>
+                    <button type="button" onclick="sairAdmin()" class="bg-minintRed hover:bg-red-800 text-white px-3.5 py-2 rounded-lg text-xs font-bold">
+                        Bloquear & Sair
+                    </button>
+                </div>
+            </div>
+
+            <!-- CAIXA DE PEDIDOS DE CÓDIGO GRATUITO RECEBIDOS -->
+            <div class="bg-white p-5 rounded-2xl border-2 border-emerald-500 shadow-md space-y-3">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xs font-extrabold uppercase text-minintNavy">0. Pedidos de Código Gratuito (Enviar pelo WhatsApp)</h3>
+                    <span id="contador-pedidos-admin" class="text-[11px] font-mono font-bold bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full">0 pendentes</span>
+                </div>
+                <p class="text-xs text-slate-600">Sempre que um candidato solicita o código gratuito, o telefone vibra 3 vezes. Clique em <strong>Enviar via WhatsApp</strong> para mandar o código diretamente ao candidato.</p>
+                <div id="lista-pedidos-codigo-whatsapp" class="space-y-2.5 text-xs">
+                    Nenhum pedido de código gratuito no momento.
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                    <h3 class="text-xs font-extrabold uppercase text-minintNavy">1. Gerar Código VIP Pago (<span class="valor-vip-texto">1.000,00 Kz</span>)</h3>
+                    <div class="flex space-x-2">
+                        <input type="tel" id="admin-tel" class="flex-grow px-3 py-2 rounded-lg border text-xs mono-font select-text" placeholder="WhatsApp (9 dígitos)">
+                        <button type="button" onclick="gerarCodigoVip()" class="bg-minintNavy text-white px-4 py-2 rounded-lg text-xs font-bold">Gerar VIP</button>
+                    </div>
+                    <div id="admin-chave-resultado" class="hidden p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-mono font-bold text-emerald-900"></div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-amber-300 space-y-3">
+                    <h3 class="text-xs font-extrabold uppercase text-minintRed">2. VIP Gratuito (3 Amigos) — Aguardando Confirmação</h3>
+                    <div id="lista-vip-gratuito-pendente" class="space-y-2 text-xs text-slate-600">
+                        Nenhum pedido pendente no momento.
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                    <h3 class="text-xs font-extrabold uppercase text-minintNavy">3. Recibos Testes Diários 24h (200,00 Kz)</h3>
+                    <div id="lista-recibos-24h-admin" class="space-y-2 text-xs text-slate-600">
+                        Nenhum recibo pendente.
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                    <h3 class="text-xs font-extrabold uppercase text-minintNavy">4. Desbloquear Consultas (Tópicos/Glossário/Materiais)</h3>
+                    <div class="flex space-x-2">
+                        <input type="tel" id="admin-tel-desbloqueio" class="flex-grow px-3 py-2 rounded-lg border text-xs mono-font select-text" placeholder="WhatsApp do candidato">
+                        <button type="button" onclick="adminDesbloquearConsultas()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold">Desbloquear</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                    <h3 class="text-xs font-extrabold uppercase text-minintNavy">5. Alterar Palavra-Passe do VMI</h3>
+                    <div class="flex space-x-2">
+                        <input type="password" id="admin-nova-senha" class="flex-grow px-3 py-2 rounded-lg border text-xs select-text" placeholder="Nova palavra-passe (mín. 6 caracteres)">
+                        <button type="button" onclick="alterarSenhaAdmin()" class="bg-minintNavy text-white px-4 py-2 rounded-lg text-xs font-bold">Guardar</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-5 rounded-2xl border border-slate-200 space-y-3">
+                    <h3 class="text-xs font-extrabold uppercase text-minintNavy">6. Valor VIP (Kz) & Banner</h3>
+                    <div class="flex space-x-2">
+                        <input type="number" id="admin-valor-vip" value="1000" class="flex-grow px-3 py-2 rounded-lg border text-xs mono-font select-text">
+                        <button type="button" onclick="atualizarValorVipAdmin()" class="bg-minintNavy text-white px-4 py-2 rounded-lg text-xs font-bold">Aplicar</button>
+                    </div>
+                    <input type="file" accept="image/*" onchange="trocarBannerPermanente(event)" class="text-xs pt-1">
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL DE VISUALIZAÇÃO DE RECIBO ENVIADO PELO CANDIDATO -->
+    <div id="modal-ver-recibo" class="fixed inset-0 bg-black/75 hidden z-50 flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-amber-400 overflow-hidden">
+            <div class="bg-minintNavy p-4 text-white flex justify-between items-center">
+                <div>
+                    <span class="text-[10px] text-amber-400 font-bold uppercase block">Comprovativo Testes Diários (24h)</span>
+                    <span id="modal-recibo-titulo" class="font-extrabold text-sm">Recibo do Candidato</span>
+                </div>
+                <button type="button" onclick="fecharModalRecibo()" class="text-slate-300 hover:text-white font-bold text-base px-2">✕</button>
+            </div>
+            <div class="p-4 space-y-4">
+                <div id="modal-recibo-conteudo" class="bg-slate-100 rounded-xl p-2 flex items-center justify-center max-h-96 overflow-auto border border-slate-200"></div>
+                <div class="flex gap-2">
+                    <button type="button" id="btn-modal-liberar-recibo" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-extrabold uppercase shadow">
+                        Liberar Portal por 24h
+                    </button>
+                    <button type="button" onclick="fecharModalRecibo()" class="px-4 py-3 rounded-xl bg-slate-200 text-slate-800 text-xs font-bold">
+                        Fechar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE PALAVRA-PASSE DO ADMINISTRADOR -->
+    <div id="modal-senha-admin" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-amber-400 overflow-hidden">
+            <div class="bg-minintNavy p-4 text-white flex justify-between items-center">
+                <div>
+                    <span class="text-[10px] text-amber-400 font-bold uppercase block">Segurança Institucional</span>
+                    <span class="font-extrabold text-sm">Acesso Restrito — VMI</span>
+                </div>
+                <button type="button" onclick="fecharModalSenhaAdmin()" class="text-slate-300 hover:text-white font-bold">✕</button>
+            </div>
+            <div class="p-5 space-y-4">
+                <p class="text-xs text-slate-600">Introduza a palavra-passe do Administrador VMI para aceder ao Painel Mestre.</p>
+                <div class="flex space-x-2">
+                    <input type="password" id="input-senha-admin" onkeydown="if(event.key==='Enter') verificarSenhaAdmin()" class="flex-grow px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm focus:ring-2 focus:ring-minintBlue focus:outline-none select-text" placeholder="Palavra-passe">
+                    <button type="button" onclick="alternarVisibilidadeSenha()" class="px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-bold text-slate-700">Ver</button>
+                </div>
+                <div id="erro-senha-admin" class="hidden text-xs font-bold text-minintRed"></div>
+                <button type="button" onclick="verificarSenhaAdmin()" class="w-full bg-minintNavy hover:bg-minintBlue text-white py-3 rounded-xl text-xs font-extrabold uppercase">
+                    Entrar no Painel VMI
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL BLOQUEIO DE CONSULTA -->
+    <div id="modal-bloqueio-consulta" class="fixed inset-0 bg-black/70 hidden z-50 flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-amber-400 overflow-hidden">
+            <div class="bg-minintRed p-4 text-white flex justify-between items-center">
+                <span class="font-extrabold text-xs uppercase">Limite Gratuito Atingido</span>
+                <button type="button" onclick="fecharModalBloqueioConsulta()" class="text-white/80 hover:text-white font-bold">✕</button>
+            </div>
+            <div class="p-5 space-y-4 text-xs">
+                <p class="text-slate-700 leading-relaxed">
+                    Já utilizou o seu <strong>1 acesso gratuito</strong> nesta secção. Para continuar a consultar livremente os <strong>Tópicos, Glossário e Materiais</strong>, adira ao plano VIP (<strong class="valor-vip-texto">1.000,00 Kz</strong>) ou solicite desbloqueio ao Administrador.
+                </p>
+                <div class="bg-amber-50 p-3 rounded-xl border border-amber-200 font-mono">
+                    Multicaixa Express: <strong>936 813 444</strong>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" onclick="fecharModalBloqueioConsulta(); irPara('inicio')" class="flex-1 bg-minintNavy text-white py-2.5 rounded-xl font-bold">
+                        Ativar VIP (1.000 Kz)
+                    </button>
+                    <button type="button" onclick="fecharModalBloqueioConsulta(); irPara('chat')" class="flex-1 bg-emerald-600 text-white py-2.5 rounded-xl font-bold">
+                        Falar no Chat
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SUPORTE VIP -->
+    <div id="modal-suporte" class="fixed inset-0 bg-black/60 hidden z-50 flex items-center justify-center p-4 no-print">
+        <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl overflow-hidden">
+            <div class="bg-minintNavy p-4 text-white flex justify-between items-center">
+                <span class="font-bold text-xs uppercase">Adesão VIP — <span class="valor-vip-texto">1.000,00 Kz</span></span>
+                <button type="button" onclick="fecharModalSuporte()" class="text-slate-300 hover:text-white font-bold">✕</button>
+            </div>
+            <div class="p-5 space-y-3 text-xs">
+                <p><strong>Valor VIP:</strong> <span class="valor-vip-texto font-bold text-minintRed">1.000,00 Kz</span></p>
+                <p><strong>Multicaixa Express:</strong> <span class="mono-font font-bold">936 813 444</span></p>
+                <p><strong>WhatsApp Administrador:</strong> <span class="mono-font font-bold">951 338 835</span></p>
+                <button type="button" onclick="abrirWhatsAppSuporte()" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl font-bold">
+                    Enviar Comprovativo no WhatsApp
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- BARRA INFERIOR FIXA COM 6 ÍCONES -->
+    <nav class="fixed bottom-0 inset-x-0 bg-[#F7F8FA] border-t border-slate-200 z-40 no-print">
+        <div class="max-w-3xl mx-auto grid grid-cols-6 text-center">
+            <button type="button" id="nav-inicio" onclick="atualizarInicioSistema()" class="py-2.5 flex flex-col items-center justify-center text-minintRed">
+                <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1v-9.5z"/>
+                </svg>
+                <span class="text-[11px] font-semibold">Início</span>
+            </button>
+
+            <button type="button" id="nav-feed" onclick="irPara('feed')" class="py-2.5 flex flex-col items-center justify-center text-slate-600 hover:text-minintRed">
+                <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M4 5h14a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5z"/>
+                    <path d="M8 9h8M8 13h8M8 17h5"/>
+                </svg>
+                <span class="text-[11px] font-medium">Feed</span>
+            </button>
+
+            <button type="button" id="nav-chat" onclick="irPara('chat')" class="py-2.5 flex flex-col items-center justify-center text-slate-600 hover:text-minintRed relative">
+                <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/>
+                </svg>
+                <span class="text-[11px] font-medium">Chat</span>
+            </button>
+
+            <button type="button" id="nav-topicos" onclick="irPara('topicos')" class="py-2.5 flex flex-col items-center justify-center text-slate-600 hover:text-minintRed">
+                <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M2 6s3-2 10-2 10 2 10 2v12s-3-2-10-2-10 2-10 2V6z"/>
+                    <path d="M12 4v12"/>
+                </svg>
+                <span class="text-[11px] font-medium">Tópicos</span>
+            </button>
+
+            <button type="button" id="nav-glossario" onclick="irPara('glossario')" class="py-2.5 flex flex-col items-center justify-center text-slate-600 hover:text-minintRed">
+                <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M6 4v16M10 4v16M14 4l4 16"/>
+                </svg>
+                <span class="text-[11px] font-medium">Glossário</span>
+            </button>
+
+            <button type="button" id="nav-materiais" onclick="irPara('materiais')" class="py-2.5 flex flex-col items-center justify-center text-slate-600 hover:text-minintRed">
+                <svg class="w-5 h-5 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <path d="M14 2v6h6M8 13h8M8 17h5"/>
+                </svg>
+                <span class="text-[11px] font-medium">Materiais</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        document.addEventListener('gesturestart', function(e) { e.preventDefault(); }, { passive: false });
+        document.addEventListener('gesturechange', function(e) { e.preventDefault(); }, { passive: false });
+        document.addEventListener('gestureend', function(e) { e.preventDefault(); }, { passive: false });
+
+        document.addEventListener('touchmove', function(e) {
+            if (e.touches && e.touches.length > 1) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+
+        let ultimoToqueZoom = 0;
+        document.addEventListener('touchend', function(e) {
+            const agora = Date.now();
+            if (agora - ultimoToqueZoom <= 280) {
+                e.preventDefault();
+            }
+            ultimoToqueZoom = agora;
+        }, { passive: false });
+
+        document.addEventListener('wheel', function(e) {
+            if (e.ctrlKey) e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && (e.key === '+' || e.key === '-' || e.key === '=' || e.key === '0')) {
+                e.preventDefault();
+            }
+        });
+
+        function vibrarDispositivo(padrao) {
+            try {
+                if (navigator.vibrate) {
+                    navigator.vibrate(padrao || 15);
+                }
+            } catch (e) {}
+        }
+
+        function vibrarTresVezesNotificacao() {
+            vibrarDispositivo([280, 150, 280, 150, 280]);
+        }
+
+        function marcarBotaoFeedback(btn, textoTemporario) {
+            if (!btn) return;
+            if (!btn.dataset.textoOriginal) {
+                btn.dataset.textoOriginal = btn.textContent.trim();
+            }
+            btn.textContent = textoTemporario;
+            clearTimeout(btn._fbTimer);
+            btn._fbTimer = setTimeout(() => {
+                btn.textContent = btn.dataset.textoOriginal;
+            }, 2400);
+        }
+
+        document.addEventListener('pointerdown', (e) => {
+            const alvo = e.target.closest('button, a, select, input, [role="button"], .interactive-card');
+            if (!alvo) return;
+            vibrarDispositivo(12);
+
+            const ripple = document.createElement('span');
+            ripple.className = 'touch-ripple';
+            ripple.style.left = e.clientX + 'px';
+            ripple.style.top = e.clientY + 'px';
+            document.body.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 450);
+        }, { passive: true });
+
+        const BANCO_POR_TEMA = {
+            historia: [
+                { q: 'Em que ano Nzinga Mbandi (Rainha Njinga) assumiu a liderança do Ndongo?', o: ['1624', '1575', '1750', '1885'], c: 0, exp: 'Assumiu em 1624, liderando a resistência no Ndongo.' },
+                { q: 'Qual reino do interior foi consolidado pela Rainha Njinga como base de resistência?', o: ['Reino da Matamba', 'Reino do Bailundo', 'Reino do Kwanyama', 'Reino de Benguela'], c: 0, exp: 'A Matamba foi o principal bastião da resistência de Njinga.' },
+                { q: 'Na conferência de 1622 em Luanda, como reagiu a Rainha Njinga ao não ter cadeira?', o: ['Sentou-se sobre uma aia para manter igualdade diplomática', 'Assinou rendição imediata', 'Abdicou em favor de terceiros', 'Encerrou a reunião'], c: 0, exp: 'Afirmou paridade soberana ao sentar-se sobre uma aia.' },
+                { q: 'Que cláusula principal marcou o Tratado de Paz de 1656 com a Rainha Njinga?', o: ['Soberania da Matamba e fronteira no rio Lucala', 'Anexação total à Coroa Portuguesa', 'Mudança da capital para Cabinda', 'Extinção das chefias Mbundu'], c: 0, exp: 'Reconheceu a soberania da Matamba com fronteira no Lucala.' },
+                { q: 'Como a sucessão de Njinga em 1663 preservou a continuidade da Matamba?', o: ['Com a irmã Mukambu (Dona Bárbara) como sucessora legítima', 'Entrega do poder ao capitão de Ambaca', 'Divisão em três colónias', 'Fim da linhagem real'], c: 0, exp: 'Dona Bárbara deu continuidade dinástica à Matamba.' },
+                { q: 'Em que data foi proclamada a Independência de Angola?', o: ['11 de Novembro de 1975', '4 de Fevereiro de 1961', '4 de Abril de 2002', '15 de Janeiro de 1975'], c: 0, exp: 'Proclamada a 11 de Novembro de 1975 por Agostinho Neto.' },
+                { q: 'Qual acordo de Janeiro de 1975 fixou o Governo de Transição?', o: ['Acordo do Alvor', 'Acordo de Bicesse', 'Protocolo de Lusaka', 'Memorando do Luena'], c: 0, exp: 'O Acordo do Alvor definiu a transição para a independência.' },
+                { q: 'Em que data foi assinada a paz definitiva em Angola (Luena)?', o: ['4 de Abril de 2002', '11 de Novembro de 1975', '31 de Maio de 1991', '20 de Novembro de 1994'], c: 0, exp: 'Assinado a 4 de Abril de 2002, marco da paz nacional.' },
+                { q: 'Que impacto teve a Batalha do Cuito Cuanavale (1987–1988)?', o: ['Travou ofensivas sul-africanas e impulsionou acordos regionais', 'Encerrou a independência em 1975', 'Criou a moeda Kwanza', 'Extinguiu o MININT'], c: 0, exp: 'Alterou o equilíbrio militar e abriu caminho aos acordos de 1988.' },
+                { q: 'Como os reinos do Planalto Central atuaram no século XIX?', o: ['Controlaram rotas comerciais entre interior e litoral', 'Abandonaram o comércio regional', 'Transferiram a corte para Luanda', 'Dissolveram as chefias locais'], c: 0, exp: 'Dominaram rotas caravaneiras e mantiveram autonomia.' }
+            ],
+            politica: [
+                { q: 'Qual é a divisão político-administrativa do território de Angola?', o: ['Províncias, Municípios e Comunas', 'Estados e Distritos', 'Regiões Autónomas e Condados', 'Departamentos e Cantões'], c: 0, exp: 'Organiza-se em Províncias, Municípios e Comunas.' },
+                { q: 'Segundo a CRA de 2010, quem acumula Chefe de Estado e Titular do Poder Executivo?', o: ['O Presidente da República', 'O Primeiro-Ministro', 'O Presidente da Assembleia', 'O Procurador-Geral'], c: 0, exp: 'A CRA concentra essas funções no Presidente da República.' },
+                { q: 'Que órgão auxiliar substituiu o cargo de Primeiro-Ministro na CRA de 2010?', o: ['O Vice-Presidente da República', 'O Ministro da Justiça', 'O Governador de Luanda', 'O Conselho de Ministros'], c: 0, exp: 'A CRA de 2010 extinguiu o Primeiro-Ministro e criou o Vice-Presidente.' },
+                { q: 'Qual órgão fiscaliza a constitucionalidade das leis em Angola?', o: ['Tribunal Constitucional', 'Ministério do Interior', 'Polícia Nacional', 'Administração Municipal'], c: 0, exp: 'Compete ao Tribunal Constitucional a fiscalização constitucional.' },
+                { q: 'Qual é a natureza do Estado angolano segundo a CRA?', o: ['República unitária e democrática de direito', 'Federação de estados soberanos', 'Monarquia parlamentar', 'Confederação de províncias'], c: 0, exp: 'Angola é uma república unitária, democrática e de direito.' },
+                { q: 'Qual órgão aprova as leis ordinárias em Angola?', o: ['Assembleia Nacional', 'Serviço de Migração', 'Tribunal de Contas', 'Governo Provincial'], c: 0, exp: 'A Assembleia Nacional é o órgão representativo e legislativo.' }
+            ],
+            admin: [
+                { q: 'O que impõe o princípio da legalidade na Administração Pública?', o: ['Agir apenas nos termos e limites da lei', 'Agir por conveniência pessoal', 'Ignorar prazos legais', 'Dispensa de normas públicas'], c: 0, exp: 'A Administração só pode fazer o que a lei permite.' },
+                { q: 'O que exige o princípio da prossecução do interesse público?', o: ['Priorizar o bem comum e direitos do cidadão', 'Favorecer interesses privados', 'Omitir fundamentos legais', 'Atuar sem transparência'], c: 0, exp: 'O interesse público orienta toda a atividade administrativa.' },
+                { q: 'Como se distinguem desconcentração e descentralização administrativa?', o: ['Desconcentração reparte tarefas no Estado; descentralização cria entes autónomos', 'São termos idênticos sem efeito jurídico', 'Desconcentração extingue municípios', 'Descentralização anula a lei'], c: 0, exp: 'Desconcentração opera na estrutura estatal; descentralização cria autonomia.' },
+                { q: 'A responsabilidade disciplinar de um funcionário público:', o: ['É autónoma face à responsabilidade criminal e civil', 'Anula sempre o processo-crime', 'Exige condenação penal prévia', 'Não se aplica em serviço'], c: 0, exp: 'A infração disciplinar corre de forma autónoma.' },
+                { q: 'Qual garantia protege contra detenção ou prisão ilegal?', o: ['Habeas Corpus', 'Recurso hierárquico', 'Certidão predial', 'Atestado médico'], c: 0, exp: 'O Habeas Corpus protege o direito à liberdade física.' },
+                { q: 'Qual princípio obriga a tratar situações iguais de forma igual?', o: ['Princípio da igualdade', 'Princípio da surpresa', 'Princípio da omissão', 'Princípio do sigilo absoluto'], c: 0, exp: 'A Administração deve tratar todos com igualdade perante a lei.' }
+            ],
+            minint: [
+                { q: 'Qual é a missão central do Ministério do Interior (MININT)?', o: ['Segurança interna, ordem pública e proteção civil', 'Política externa e embaixadas', 'Emissão de moeda nacional', 'Julgamento de processos cíveis'], c: 0, exp: 'O MININT assegura segurança interna, ordem pública e serviços afetos.' },
+                { q: 'Qual órgão do MININT controla fronteiras e atos migratórios?', o: ['Serviço de Migração e Estrangeiros (SME)', 'Serviço Penitenciário (SP)', 'Bombeiros', 'Tribunal Supremo'], c: 0, exp: 'O SME controla fronteiras, vistos e estrangeiros.' },
+                { q: 'Qual órgão do MININT investiga infrações penais sob direção do MP?', o: ['Serviço de Investigação Criminal (SIC)', 'Serviço de Proteção Civil', 'Administração Comunal', 'Ministério das Finanças'], c: 0, exp: 'O SIC conduz a investigação criminal sob orientação do Ministério Público.' },
+                { q: 'Qual órgão do MININT atua no socorro, incêndios e prevenção de riscos?', o: ['Serviço de Proteção Civil e Bombeiros (SPCB)', 'SME', 'SIC', 'Serviço Penitenciário'], c: 0, exp: 'O SPCB previne sinistros e presta socorro em emergências.' },
+                { q: 'Em que caso cessa o dever de obediência hierárquica no MININT?', o: ['Quando a ordem constitua crime manifesto', 'Quando a tarefa exige esforço', 'Quando o turno termina', 'Quando há discordância leve'], c: 0, exp: 'Não se deve cumprir ordem que implique crime manifesto.' },
+                { q: 'Qual regra rege o uso da força pelos agentes de segurança?', o: ['Necessidade, adequação e proporcionalidade', 'Força máxima em qualquer caso', 'Uso livre sem critério', 'Atuação sem limite legal'], c: 0, exp: 'O uso da força deve ser necessário, adequado e proporcional.' }
+            ],
+            patriotismo: [
+                { q: 'Quais são os três Símbolos Nacionais consagrados na CRA?', o: ['Bandeira, Insígnia e Hino Nacionais', 'Bandeira, Moeda e Brasão', 'Hino, Passaporte e Lei', 'Mapa, Rio e Montanha'], c: 0, exp: 'São a Bandeira Nacional, a Insígnia Nacional e o Hino Nacional.' },
+                { q: 'Qual é o dever patriótico essencial de cada cidadão?', o: ['Defender a soberania e integridade de Angola', 'Ignorar deveres cívicos', 'Agir contra a unidade nacional', 'Dispensa de leis'], c: 0, exp: 'Defender a soberania e a unidade do país é dever cívico.' },
+                { q: 'O que simboliza a cor preta na Bandeira Nacional de Angola?', o: ['O continente africano', 'As águas do mar', 'As riquezas minerais', 'A paz perpétua'], c: 0, exp: 'O preto representa o continente africano.' },
+                { q: 'O que simboliza a cor vermelha na Bandeira Nacional de Angola?', o: ['O sangue derramado pela independência e defesa', 'A agricultura tropical', 'O céu de Luanda', 'A fronteira sul'], c: 0, exp: 'O vermelho evoca o sacrifício e a luta pela liberdade.' },
+                { q: 'O que simboliza o amarelo-ouro na Bandeira Nacional de Angola?', o: ['As riquezas do subsolo e recursos do país', 'As florestas do norte', 'O oceano Atlântico', 'A época das chuvas'], c: 0, exp: 'O amarelo simboliza as riquezas naturais do país.' },
+                { q: 'Que valor cívico fortalece a coesão nacional em Angola?', o: ['Unidade nacional, respeito pela lei e civismo', 'Divisão regional', 'Desrespeito institucional', 'Omissão cívica'], c: 0, exp: 'A unidade na diversidade e o civismo fortalecem a nação.' }
+            ]
+        };
+
+        const DISCIPLINAS_ESTUDO = {
+            historia: { nome: 'História de Angola', qtdTotal: BANCO_POR_TEMA.historia.length * 15, itens: BANCO_POR_TEMA.historia },
+            politica: { nome: 'Organização Política', qtdTotal: BANCO_POR_TEMA.politica.length * 18, itens: BANCO_POR_TEMA.politica },
+            admin: { nome: 'Administração Pública', qtdTotal: BANCO_POR_TEMA.admin.length * 15, itens: BANCO_POR_TEMA.admin },
+            minint: { nome: 'Órgãos do MININT', qtdTotal: BANCO_POR_TEMA.minint.length * 12, itens: BANCO_POR_TEMA.minint },
+            patriotismo: { nome: 'Patriotismo & Soberania', qtdTotal: BANCO_POR_TEMA.patriotismo.length * 10, itens: BANCO_POR_TEMA.patriotismo }
+        };
+
+        const GLOSSARIO_ITENS = [
+            { termo: 'Rainha Njinga (Nzinga Mbandi)', def: 'Soberana do Ndongo e da Matamba (1583–1663), símbolo maior da diplomacia e resistência anticolonial em Angola.' },
+            { termo: 'Habeas Corpus', def: 'Garantia constitucional destinada a proteger qualquer cidadão contra prisão ou detenção ilegal.' },
+            { termo: 'Legalidade', def: 'Princípio segundo o qual os órgãos públicos só podem agir nos termos e limites da lei.' },
+            { termo: 'PNA', def: 'Polícia Nacional de Angola, força paramilitar integrante do Ministério do Interior encarregue da ordem pública.' },
+            { termo: 'SIC', def: 'Serviço de Investigação Criminal, órgão executivo do MININT encarregue da investigação de infrações penais.' }
+        ];
+
+        const MATERIAIS_ITENS = [
+            { titulo: 'História de Angola — Rainha Njinga, Período Pré e Pós-Colonial', texto: 'Estudo aprofundado da resistência da Rainha Njinga no Ndongo e Matamba, Tratado de Paz de 1656, luta de libertação nacional, Acordo do Alvor, Independência a 11 de Novembro de 1975 e Paz a 4 de Abril de 2002.' },
+            { titulo: 'Constituição da República de Angola (CRA 2010)', texto: 'Direitos e deveres fundamentais, Símbolos Nacionais, organização do Poder Executivo e garantias processuais.' },
+            { titulo: 'Orgânica, Disciplina e Missão do MININT', texto: 'Estrutura e competências da PNA, SIC, SME, SPCB e Serviço Penitenciário.' }
+        ];
+
+        let estado = {
+            nome: '',
+            tel: '',
+            carreira: 'PNA',
+            vip: false,
+            tentativasCodigo: 4,
+            questoes: [],
+            indiceQ: 0,
+            respostas: {},
+            timer: null,
+            segundos: 900,
+            timer60s: null,
+            discAtual: null,
+            indiceEstudo: 0,
+            opcaoEstudoSelecionada: null,
+            adminAutenticado: false,
+            tentativasSenhaAdmin: 4,
+            indicadoPor: ''
+        };
+
+        let toquesAdmin = 0;
+        let ultimoToqueBrasao = 0;
+        let ultimoTotalPedidosConhecido = 0;
+
+        function getSenhaAdmin() {
+            return localStorage.getItem('minint_admin_pass') || 'vado1234';
+        }
+
+        function getValorVip() {
+            return Number(localStorage.getItem('minint_valor_vip') || 1000);
+        }
+
+        function formatarKz(valor) {
+            return valor.toLocaleString('pt-PT', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Kz';
+        }
+
+        function atualizarTextosValorVip() {
+            const val = getValorVip();
+            document.querySelectorAll('.valor-vip-texto').forEach(el => el.textContent = formatarKz(val));
+            document.querySelectorAll('.valor-vip-curto').forEach(el => el.textContent = val.toLocaleString('pt-PT') + ' Kz');
+        }
+
+        function mostrarToast(msg, vibrarAlerta) {
+            const box = document.getElementById('toast-box');
+            document.getElementById('toast-msg').textContent = msg;
+            box.classList.remove('hidden');
+            if (vibrarAlerta) {
+                vibrarTresVezesNotificacao();
+            }
+            clearTimeout(window._toastTimeout);
+            window._toastTimeout = setTimeout(() => box.classList.add('hidden'), 5500);
+        }
+
+        function fecharToast() {
+            document.getElementById('toast-box').classList.add('hidden');
+        }
+
+        function esconderTudo() {
+            ['view-inicio', 'view-painel-simulado', 'view-feed', 'view-chat', 'view-topicos', 'view-glossario', 'view-materiais', 'view-partilhar', 'view-exame', 'view-estudo-disc', 'view-resultado', 'view-admin']
+                .forEach(id => document.getElementById(id).classList.add('hidden'));
+        }
+
+        function atualizarNavAtiva(aba) {
+            ['inicio', 'feed', 'chat', 'topicos', 'glossario', 'materiais'].forEach(k => {
+                const el = document.getElementById('nav-' + k);
+                if (!el) return;
+                el.className = (k === aba)
+                    ? 'py-2.5 flex flex-col items-center justify-center text-minintRed'
+                    : 'py-2.5 flex flex-col items-center justify-center text-slate-600 hover:text-minintRed';
+            });
+        }
+
+        function atualizarInicioSistema() {
+            if (estado.timer) clearInterval(estado.timer);
+            if (estado.timer60s) clearInterval(estado.timer60s);
+
+            atualizarTextosValorVip();
+            atualizarBadgeBrasao();
+            prepararLinkPartilha();
+
+            const bannerSalvo = localStorage.getItem('minint_banner_fixo');
+            if (bannerSalvo) document.getElementById('img-banner-oficial').src = bannerSalvo;
+
+            esconderTudo();
+            atualizarNavAtiva('inicio');
+            const viewInicio = document.getElementById('view-inicio');
+            viewInicio.classList.remove('hidden');
+            viewInicio.classList.remove('view-fade');
+            void viewInicio.offsetWidth;
+            viewInicio.classList.add('view-fade');
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            mostrarToast('Sistema atualizado.');
+        }
+
+        function usuarioTemAcessoLivre() {
+            if (estado.vip) return true;
+            if (estado.tel && localStorage.getItem('vip_' + estado.tel) === 'true') {
+                estado.vip = true;
+                return true;
+            }
+            if (estado.tel) {
+                const exp24 = Number(localStorage.getItem('portal_24h_' + estado.tel) || 0);
+                if (exp24 > Date.now()) return true;
+            }
+            if (estado.tel && localStorage.getItem('consultas_desbloqueadas_' + estado.tel) === 'true') {
+                return true;
+            }
+            return false;
+        }
+
+        function verificarEContarConsultaGratuita(secao) {
+            if (usuarioTemAcessoLivre()) return true;
+            const chaveId = estado.tel || 'visitante_unico';
+            const chaveUso = 'uso_unico_' + secao + '_' + chaveId;
+            const jaUsou = localStorage.getItem(chaveUso) === 'true';
+
+            if (!jaUsou) {
+                localStorage.setItem(chaveUso, 'true');
+                mostrarToast('1.º acesso gratuito concedido em ' + secao.toUpperCase() + '.');
+                return true;
+            } else {
+                document.getElementById('modal-bloqueio-consulta').classList.remove('hidden');
+                return false;
+            }
+        }
+
+        function fecharModalBloqueioConsulta() {
+            document.getElementById('modal-bloqueio-consulta').classList.add('hidden');
+        }
+
+        function irPara(view) {
+            if (view === 'admin' && !estado.adminAutenticado) {
+                abrirModalSenhaAdmin();
+                return;
+            }
+            if (view === 'topicos' && !verificarEContarConsultaGratuita('topicos')) return;
+            if (view === 'glossario' && !verificarEContarConsultaGratuita('glossario')) return;
+            if (view === 'materiais' && !verificarEContarConsultaGratuita('materiais')) return;
+
+            esconderTudo();
+            atualizarNavAtiva(view);
+
+            if (view === 'inicio') {
+                document.getElementById('view-inicio').classList.remove('hidden');
+            } else if (view === 'painel-simulado') {
+                document.getElementById('view-painel-simulado').classList.remove('hidden');
+            } else if (view === 'feed') {
+                document.getElementById('view-feed').classList.remove('hidden');
+            } else if (view === 'chat') {
+                document.getElementById('view-chat').classList.remove('hidden');
+                renderizarMensagensChat();
+            } else if (view === 'topicos') {
+                document.getElementById('view-topicos').classList.remove('hidden');
+                atualizarBadgesAcessoSecoes();
+                renderizarTopicos();
+            } else if (view === 'glossario') {
+                document.getElementById('view-glossario').classList.remove('hidden');
+                atualizarBadgesAcessoSecoes();
+                renderizarGlossario();
+            } else if (view === 'materiais') {
+                document.getElementById('view-materiais').classList.remove('hidden');
+                atualizarBadgesAcessoSecoes();
+                renderizarMateriais();
+            } else if (view === 'partilhar') {
+                document.getElementById('view-partilhar').classList.remove('hidden');
+                prepararLinkPartilha();
+            } else if (view === 'admin') {
+                document.getElementById('view-admin').classList.remove('hidden');
+                renderizarPedidosCodigoWhatsApp();
+                renderizarPendentesVipGratuito();
+                renderizarRecibos24hAdmin();
+            }
+        }
+
+        function atualizarBadgesAcessoSecoes() {
+            const livre = usuarioTemAcessoLivre();
+            ['topicos', 'glossario', 'materiais'].forEach(sec => {
+                const el = document.getElementById('status-acesso-' + sec);
+                if (!el) return;
+                if (livre) {
+                    el.textContent = 'Acesso Ilimitado Ativo';
+                    el.className = 'text-[11px] font-bold bg-emerald-100 text-emerald-900 px-3 py-1 rounded-full';
+                } else {
+                    const chaveId = estado.tel || 'visitante_unico';
+                    const usado = localStorage.getItem('uso_unico_' + sec + '_' + chaveId) === 'true';
+                    el.textContent = usado ? 'Consulta Gratuita Utilizada' : '1 Consulta Gratuita Disponível';
+                    el.className = usado
+                        ? 'text-[11px] font-bold bg-red-100 text-minintRed px-3 py-1 rounded-full'
+                        : 'text-[11px] font-bold bg-amber-100 text-amber-900 px-3 py-1 rounded-full';
+                }
+            });
+        }
+
+        function obterPedidosCodigo() {
+            try {
+                return JSON.parse(localStorage.getItem('minint_pedidos_codigo_wa') || '[]');
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function salvarPedidosCodigo(lista) {
+            localStorage.setItem('minint_pedidos_codigo_wa', JSON.stringify(lista));
+            atualizarBadgeBrasao();
+        }
+
+        function atualizarBadgeBrasao() {
+            const pedidos = obterPedidosCodigo();
+            const badge = document.getElementById('badge-pedidos-brasao');
+            if (!badge) return;
+            if (pedidos.length > 0) {
+                badge.textContent = pedidos.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        function ativarNotificacoesPushAdmin() {
+            vibrarTresVezesNotificacao();
+            if ('Notification' in window && Notification.permission !== 'granted') {
+                Notification.requestPermission().then(() => {
+                    mostrarToast('Alerta de 3 vibrações ativado!');
+                });
+            } else {
+                mostrarToast('Alerta de 3 vibrações ativado!');
+            }
+        }
+
+        function dispararAlertaNovoPedidoAdmin(pedido) {
+            vibrarTresVezesNotificacao();
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+                try {
+                    new Notification('Novo Pedido de Código MININT', {
+                        body: pedido.nome + ' (+244 ' + pedido.tel + ') pediu código gratuito: ' + pedido.codigo,
+                        vibrate: [280, 150, 280, 150, 280]
+                    });
+                } catch (e) {}
+            }
+
+            if (estado.adminAutenticado) {
+                mostrarToast('NOTIFICAÇÃO VMI: ' + pedido.nome + ' (+244 ' + pedido.tel + ') solicitou código gratuito!', true);
+                renderizarPedidosCodigoWhatsApp();
+            }
+        }
+
+        function solicitarCodigoWhatsApp() {
+            const nome = document.getElementById('reg-nome').value.trim();
+            const telRaw = document.getElementById('reg-tel').value.trim();
+            const carreira = document.getElementById('reg-carreira').value;
+            const limpo = telRaw.replace(/\D/g, '');
+
+            if (!nome) {
+                mostrarToast('Por favor, introduza o seu nome completo.');
+                return;
+            }
+            if (limpo.length !== 9) {
+                mostrarToast('Introduza um número de WhatsApp válido com 9 dígitos (ex: 923 000 000).');
+                return;
+            }
+
+            const jaFezGratis = localStorage.getItem('gratis_feito_' + limpo) === 'true';
+            const temExtra = localStorage.getItem('extra_gratis_' + limpo) === 'true';
+            const ehVip = localStorage.getItem('vip_' + limpo) === 'true';
+            const exp24 = Number(localStorage.getItem('portal_24h_' + limpo) || 0);
+
+            if (!ehVip && !(exp24 > Date.now()) && jaFezGratis && !temExtra) {
+                mostrarToast('Este número de WhatsApp já utilizou o 1.º teste gratuito. Partilhe com 3 amigos ou ative o VIP.');
+                return;
+            }
+
+            estado.nome = nome;
+            estado.tel = limpo;
+            estado.carreira = carreira;
+            estado.vip = ehVip;
+            estado.tentativasCodigo = 4;
+
+            if (estado.indicadoPor && estado.indicadoPor !== limpo) {
+                const chaveConv = 'convite_entrou_' + estado.indicadoPor + '_' + limpo;
+                if (!localStorage.getItem(chaveConv)) {
+                    localStorage.setItem(chaveConv, 'true');
+                    const totalEntraram = Number(localStorage.getItem('ref_entraram_' + estado.indicadoPor) || 0) + 1;
+                    localStorage.setItem('ref_entraram_' + estado.indicadoPor, String(totalEntraram));
+                    if (totalEntraram >= 3 && !localStorage.getItem('bonus_gratis_dado_' + estado.indicadoPor)) {
+                        localStorage.setItem('bonus_gratis_dado_' + estado.indicadoPor, 'true');
+                        localStorage.setItem('extra_gratis_' + estado.indicadoPor, 'true');
+                    }
+                }
+            }
+
+            const codigoGerado = String(Math.floor(1000 + Math.random() * 9000));
+            localStorage.setItem('codigo_pendente_tel_' + limpo, codigoGerado);
+
+            const pedidos = obterPedidosCodigo().filter(p => p.tel !== limpo);
+            const novoPedido = {
+                nome: nome,
+                tel: limpo,
+                carreira: carreira,
+                codigo: codigoGerado,
+                hora: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' })
+            };
+            pedidos.unshift(novoPedido);
+            salvarPedidosCodigo(pedidos);
+
+            adicionarMensagemChatSistema(
+                'Pedido de Código Gratuito: ' + nome + ' | WhatsApp: +244 ' + limpo + ' | Carreira: ' + carreira
+            );
+
+            marcarBotaoFeedback(document.getElementById('btn-solicitar-codigo'), 'Enviado ✓');
+
+            document.getElementById('caixa-codigo-abaixo').classList.remove('hidden');
+            document.getElementById('codigo-tentativas-info').textContent = 'Tentativas: 4/4';
+            document.getElementById('tel-aguardando-label').textContent = '+244 ' + limpo;
+            document.getElementById('input-codigo-candidato').value = '';
+
+            dispararAlertaNovoPedidoAdmin(novoPedido);
+            mostrarToast('Enviado! Aguarde o código gratuito no seu WhatsApp (+244 ' + limpo + ').');
+        }
+
+        function validarCodigoCandidato() {
+            const digitado = document.getElementById('input-codigo-candidato').value.trim();
+            const codigoEsperado = localStorage.getItem('codigo_pendente_tel_' + estado.tel) || '';
+
+            if (!digitado || digitado.length < 4) {
+                mostrarToast('Introduza o código de 4 dígitos recebido no seu WhatsApp.');
+                return;
+            }
+
+            if (codigoEsperado && digitado === codigoEsperado) {
+                localStorage.removeItem('codigo_pendente_tel_' + estado.tel);
+                const restantes = obterPedidosCodigo().filter(p => p.tel !== estado.tel);
+                salvarPedidosCodigo(restantes);
+                mostrarToast('Código confirmado! Bem-vindo ao 1.º teste gratuito.');
+                abrirPainelSimulado();
+            } else {
+                estado.tentativasCodigo--;
+                document.getElementById('codigo-tentativas-info').textContent = 'Tentativas: ' + Math.max(0, estado.tentativasCodigo) + '/4';
+                if (estado.tentativasCodigo <= 0) {
+                    document.getElementById('caixa-codigo-abaixo').classList.add('hidden');
+                    mostrarToast('Limite de 4 tentativas atingido. Solicite um novo código.');
+                } else {
+                    mostrarToast('Código incorreto. Verifique a mensagem enviada pelo Administrador no seu WhatsApp.');
+                }
+            }
+        }
+
+        function renderizarPedidosCodigoWhatsApp() {
+            const box = document.getElementById('lista-pedidos-codigo-whatsapp');
+            const badge = document.getElementById('contador-pedidos-admin');
+            if (!box) return;
+            const pedidos = obterPedidosCodigo();
+            if (badge) badge.textContent = pedidos.length + ' pendente(s)';
+
+            if (pedidos.length === 0) {
+                box.innerHTML = '<div class="text-slate-500 py-2">Nenhum pedido de código gratuito pendente no momento.</div>';
+                return;
+            }
+
+            box.innerHTML = '';
+            pedidos.forEach(item => {
+                const row = document.createElement('div');
+                row.className = 'p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3';
+                row.innerHTML =
+                    '<div>' +
+                        '<div class="font-extrabold text-minintNavy">' + item.nome + ' <span class="text-[10px] font-mono bg-white px-2 py-0.5 rounded border ml-1">' + item.carreira + '</span></div>' +
+                        '<div class="text-[11px] font-mono text-slate-700 mt-0.5">WhatsApp: <strong>+244 ' + item.tel + '</strong> • Hora: ' + item.hora + '</div>' +
+                        '<div class="text-xs font-mono font-extrabold text-minintRed mt-1">Código a enviar: ' + item.codigo + '</div>' +
+                    '</div>';
+
+                const acoes = document.createElement('div');
+                acoes.className = 'flex items-center gap-2';
+
+                const btnWa = document.createElement('button');
+                btnWa.type = 'button';
+                btnWa.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-[11px] font-extrabold shadow';
+                btnWa.textContent = 'Enviar via WhatsApp';
+                btnWa.onclick = () => {
+                    marcarBotaoFeedback(btnWa, 'Enviado ✓');
+                    enviarCodigoPeloWhatsAppAdmin(item);
+                };
+
+                const btnOk = document.createElement('button');
+                btnOk.type = 'button';
+                btnOk.className = 'bg-slate-200 hover:bg-slate-300 text-slate-800 px-2.5 py-2 rounded-lg text-[11px] font-bold';
+                btnOk.textContent = 'Concluir';
+                btnOk.onclick = () => {
+                    const novaLista = obterPedidosCodigo().filter(p => p.tel !== item.tel);
+                    salvarPedidosCodigo(novaLista);
+                    renderizarPedidosCodigoWhatsApp();
+                    mostrarToast('Pedido de ' + item.nome + ' concluído.');
+                };
+
+                acoes.appendChild(btnWa);
+                acoes.appendChild(btnOk);
+                row.appendChild(acoes);
+                box.appendChild(row);
+            });
+        }
+
+        function enviarCodigoPeloWhatsAppAdmin(item) {
+            const textoWa = 'Saudações, ' + item.nome + '!\n\n' +
+                'Aqui é a Administração do *Simulador Oficial MININT Angola*.\n' +
+                'O seu código de acesso gratuito para o 1.º teste (' + item.carreira + ') é: *' + item.codigo + '*\n\n' +
+                'Introduza este código no portal para iniciar o seu simulado. Boa preparação!';
+            const url = 'https://api.whatsapp.com/send?phone=244' + item.tel + '&text=' + encodeURIComponent(textoWa);
+            const win = window.open(url, '_blank');
+            if (!win) {
+                window.location.href = url;
+            }
+            mostrarToast('Enviado para o WhatsApp de ' + item.nome + '!');
+        }
+
+        window.addEventListener('storage', (ev) => {
+            if (ev.key === 'minint_pedidos_codigo_wa') {
+                const atuais = obterPedidosCodigo();
+                atualizarBadgeBrasao();
+                if (atuais.length > ultimoTotalPedidosConhecido && atuais.length > 0) {
+                    dispararAlertaNovoPedidoAdmin(atuais[0]);
+                }
+                ultimoTotalPedidosConhecido = atuais.length;
+                if (estado.adminAutenticado) renderizarPedidosCodigoWhatsApp();
+            }
+        });
+
+        setInterval(() => {
+            const atuais = obterPedidosCodigo();
+            atualizarBadgeBrasao();
+            if (atuais.length > ultimoTotalPedidosConhecido && atuais.length > 0) {
+                dispararAlertaNovoPedidoAdmin(atuais[0]);
+            }
+            ultimoTotalPedidosConhecido = atuais.length;
+        }, 2500);
+
+        function registarToqueBrasao(e) {
+            if (e) e.preventDefault();
+            const agora = Date.now();
+            if (agora - ultimoToqueBrasao > 3500) {
+                toquesAdmin = 0;
+            }
+            ultimoToqueBrasao = agora;
+            toquesAdmin++;
+            vibrarDispositivo(18);
+
+            if (toquesAdmin >= 5) {
+                toquesAdmin = 0;
+                if (estado.adminAutenticado) {
+                    irPara('admin');
+                } else {
+                    abrirModalSenhaAdmin();
+                }
+            }
+        }
+
+        function abrirModalSenhaAdmin() {
+            document.getElementById('input-senha-admin').value = '';
+            document.getElementById('erro-senha-admin').classList.add('hidden');
+            document.getElementById('modal-senha-admin').classList.remove('hidden');
+            setTimeout(() => document.getElementById('input-senha-admin').focus(), 80);
+        }
+
+        function fecharModalSenhaAdmin() {
+            document.getElementById('modal-senha-admin').classList.add('hidden');
+        }
+
+        function alternarVisibilidadeSenha() {
+            const inp = document.getElementById('input-senha-admin');
+            inp.type = (inp.type === 'password') ? 'text' : 'password';
+        }
+
+        function verificarSenhaAdmin() {
+            const digitada = document.getElementById('input-senha-admin').value;
+            const erroEl = document.getElementById('erro-senha-admin');
+
+            if (estado.tentativasSenhaAdmin <= 0) {
+                erroEl.textContent = 'Acesso bloqueado por excesso de tentativas incorretas.';
+                erroEl.classList.remove('hidden');
+                return;
+            }
+
+            if (digitada === getSenhaAdmin()) {
+                estado.adminAutenticado = true;
+                estado.tentativasSenhaAdmin = 4;
+                fecharModalSenhaAdmin();
+                irPara('admin');
+                ativarNotificacoesPushAdmin();
+            } else {
+                estado.tentativasSenhaAdmin--;
+                erroEl.textContent = 'Palavra-passe incorreta. Tentativas restantes: ' + estado.tentativasSenhaAdmin + '/4';
+                erroEl.classList.remove('hidden');
+            }
+        }
+
+        function sairAdmin() {
+            estado.adminAutenticado = false;
+            irPara('inicio');
+            mostrarToast('Sessão do Administrador VMI encerrada.');
+        }
+
+        function alterarSenhaAdmin() {
+            if (!estado.adminAutenticado) return;
+            const nova = document.getElementById('admin-nova-senha').value.trim();
+            if (nova.length < 6) {
+                mostrarToast('A nova palavra-passe deve ter pelo menos 6 caracteres.');
+                return;
+            }
+            localStorage.setItem('minint_admin_pass', nova);
+            document.getElementById('admin-nova-senha').value = '';
+            mostrarToast('Palavra-passe do Administrador VMI atualizada!');
+        }
+
+        function ativarVipManual() {
+            const telLimpo = document.getElementById('reg-tel').value.replace(/\D/g, '') || estado.tel;
+            const cod = document.getElementById('input-codigo-vip').value.trim().toUpperCase();
+
+            if (!telLimpo || telLimpo.length !== 9) {
+                mostrarToast('Preencha primeiro o seu número de WhatsApp com 9 dígitos.');
+                return;
+            }
+            if (!cod || cod.length < 5) {
+                mostrarToast('Introduza um Código VIP válido.');
+                return;
+            }
+
+            if (cod.startsWith('VIPFREE-')) {
+                const aprovadoPeloAdmin = localStorage.getItem('vipfree_aprovado_' + telLimpo) === 'true';
+                if (!aprovadoPeloAdmin) {
+                    registarPedidoVipGratuito(telLimpo, cod);
+                    document.getElementById('aviso-aguardando-admin').classList.remove('hidden');
+                    mostrarToast('Código VIP gratuito registado! Aguarde a confirmação do Administrador.');
+                    return;
+                }
+            }
+
+            localStorage.setItem('vip_' + telLimpo, 'true');
+            estado.tel = telLimpo;
+            estado.nome = document.getElementById('reg-nome').value.trim() || estado.nome || 'Candidato VIP';
+            estado.carreira = document.getElementById('reg-carreira').value || estado.carreira;
+            estado.vip = true;
+
+            if (estado.indicadoPor && estado.indicadoPor !== telLimpo) {
+                const chavePag = 'convite_pagou_' + estado.indicadoPor + '_' + telLimpo;
+                if (!localStorage.getItem(chavePag)) {
+                    localStorage.setItem(chavePag, 'true');
+                    const totalPagaram = Number(localStorage.getItem('ref_pagaram_' + estado.indicadoPor) || 0) + 1;
+                    localStorage.setItem('ref_pagaram_' + estado.indicadoPor, String(totalPagaram));
+
+                    if (totalPagaram >= 3 && !localStorage.getItem('vipfree_gerado_' + estado.indicadoPor)) {
+                        const codGratuito = 'VIPFREE-' + estado.indicadoPor.slice(-4) + '-2026';
+                        localStorage.setItem('vipfree_gerado_' + estado.indicadoPor, codGratuito);
+                        registarPedidoVipGratuito(estado.indicadoPor, codGratuito);
+                    }
+                }
+            }
+
+            mostrarToast('Acesso VIP (' + formatarKz(getValorVip()) + ') ativado com sucesso!');
+            abrirPainelSimulado();
+        }
+
+        function registarPedidoVipGratuito(telCandidato, codigo) {
+            const lista = JSON.parse(localStorage.getItem('minint_pendentes_vipfree') || '[]');
+            if (!lista.some(item => item.tel === telCandidato)) {
+                lista.push({ tel: telCandidato, codigo: codigo, data: new Date().toLocaleString('pt-PT') });
+                localStorage.setItem('minint_pendentes_vipfree', JSON.stringify(lista));
+            }
+        }
+
+        function renderizarPendentesVipGratuito() {
+            const box = document.getElementById('lista-vip-gratuito-pendente');
+            if (!box) return;
+            const lista = JSON.parse(localStorage.getItem('minint_pendentes_vipfree') || '[]');
+            if (lista.length === 0) {
+                box.innerHTML = 'Nenhum pedido de VIP gratuito pendente.';
+                return;
+            }
+            box.innerHTML = '';
+            lista.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = 'p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-center justify-between gap-2';
+                row.innerHTML = '<div><div class="font-bold text-minintNavy mono-font">+244 ' + item.tel + '</div><div class="text-[11px] font-mono text-slate-600">' + item.codigo + '</div></div>';
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold';
+                btn.textContent = 'Confirmar VIP';
+                btn.onclick = () => {
+                    localStorage.setItem('vipfree_aprovado_' + item.tel, 'true');
+                    localStorage.setItem('vip_' + item.tel, 'true');
+                    lista.splice(idx, 1);
+                    localStorage.setItem('minint_pendentes_vipfree', JSON.stringify(lista));
+                    renderizarPendentesVipGratuito();
+                    mostrarToast('VIP Gratuito confirmado para +244 ' + item.tel + '!', true);
+                };
+                row.appendChild(btn);
+                box.appendChild(row);
+            });
+        }
+
+        function comprimirImagemRecibo(file, callback) {
+            if (!file || !file.type || !file.type.startsWith('image/')) {
+                if (!file) { callback(null); return; }
+                const reader = new FileReader();
+                reader.onload = (e) => callback(e.target.result);
+                reader.onerror = () => callback(null);
+                reader.readAsDataURL(file);
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const maxW = 900;
+                    const scale = Math.min(1, maxW / img.width);
+                    const canvas = document.createElement('canvas');
+                    canvas.width = Math.round(img.width * scale);
+                    canvas.height = Math.round(img.height * scale);
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    callback(canvas.toDataURL('image/jpeg', 0.78));
+                };
+                img.onerror = () => callback(e.target.result);
+                img.src = e.target.result;
+            };
+            reader.onerror = () => callback(null);
+            reader.readAsDataURL(file);
+        }
+
+        function atualizarNomeFicheiro24h(inp) {
+            const lbl = document.getElementById('label-ficheiro-24h');
+            if (!lbl) return;
+            const f = inp && inp.files && inp.files[0];
+            lbl.textContent = f ? f.name : 'Sem ficheiro';
+        }
+
+        function enviarRecibo24h(btnEl) {
+            const tel = (document.getElementById('reg-tel') && document.getElementById('reg-tel').value.replace(/\D/g, '')) || estado.tel;
+            const nomeCand = (document.getElementById('reg-nome') && document.getElementById('reg-nome').value.trim()) || estado.nome || 'Candidato';
+            if (!tel || tel.length !== 9) {
+                mostrarToast('Introduza o seu número de WhatsApp (9 dígitos) antes de enviar o recibo.');
+                return;
+            }
+            const inp = document.getElementById('input-recibo-24h');
+            const ficheiro = inp && inp.files && inp.files[0];
+            if (!ficheiro) {
+                mostrarToast('Selecione primeiro a imagem ou PDF do comprovativo de 200,00 Kz.');
+                return;
+            }
+
+            comprimirImagemRecibo(ficheiro, (dadosUrl) => {
+                const pendentes = JSON.parse(localStorage.getItem('minint_recibos_24h') || '[]');
+                pendentes.unshift({
+                    id: 'rec_' + Date.now(),
+                    nome: nomeCand,
+                    tel: tel,
+                    ficheiro: ficheiro.name,
+                    tipo: ficheiro.type || 'image/jpeg',
+                    dadosUrl: dadosUrl || '',
+                    data: new Date().toLocaleString('pt-PT')
+                });
+                try {
+                    localStorage.setItem('minint_recibos_24h', JSON.stringify(pendentes));
+                } catch (err) {
+                    pendentes[0].dadosUrl = '';
+                    localStorage.setItem('minint_recibos_24h', JSON.stringify(pendentes));
+                }
+
+                marcarBotaoFeedback(btnEl, 'Enviado ✓');
+                const st = document.getElementById('status-recibo-24h');
+                if (inp) { inp.value = ''; atualizarNomeFicheiro24h(inp); }
+                if (st) st.textContent = 'Recibo enviado.';
+                mostrarToast('Enviado! Comprovativo de Testes Diários (200,00 Kz) entregue ao VMI.', true);
+            });
+        }
+
+        function renderizarRecibos24hAdmin() {
+            const box = document.getElementById('lista-recibos-24h-admin');
+            if (!box) return;
+            const lista = JSON.parse(localStorage.getItem('minint_recibos_24h') || '[]');
+            if (lista.length === 0) {
+                box.innerHTML = 'Nenhum recibo pendente.';
+                return;
+            }
+            box.innerHTML = '';
+            lista.forEach((item, idx) => {
+                const row = document.createElement('div');
+                row.className = 'p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5';
+
+                const topo = document.createElement('div');
+                topo.className = 'flex items-center justify-between gap-2';
+                topo.innerHTML =
+                    '<div>' +
+                        '<div class="font-extrabold text-minintNavy">' + (item.nome || 'Candidato') + ' <span class="mono-font text-minintBlue">(+244 ' + item.tel + ')</span></div>' +
+                        '<div class="text-[11px] text-slate-600">' + item.ficheiro + ' • ' + (item.data || '') + '</div>' +
+                    '</div>';
+                row.appendChild(topo);
+
+                if (item.dadosUrl && item.dadosUrl.startsWith('data:image')) {
+                    const thumb = document.createElement('img');
+                    thumb.src = item.dadosUrl;
+                    thumb.alt = 'Comprovativo';
+                    thumb.className = 'w-full h-28 object-cover rounded-lg border border-slate-300 cursor-pointer';
+                    thumb.onclick = () => abrirModalRecibo(item, idx);
+                    row.appendChild(thumb);
+                }
+
+                const acoes = document.createElement('div');
+                acoes.className = 'flex items-center gap-2';
+
+                const btnVer = document.createElement('button');
+                btnVer.type = 'button';
+                btnVer.className = 'bg-minintBlue hover:bg-minintNavy text-white px-3 py-1.5 rounded-lg text-[11px] font-bold';
+                btnVer.textContent = 'Ver Recibo';
+                btnVer.onclick = () => abrirModalRecibo(item, idx);
+
+                const btnLiberar = document.createElement('button');
+                btnLiberar.type = 'button';
+                btnLiberar.className = 'bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold';
+                btnLiberar.textContent = 'Liberar 24h';
+                btnLiberar.onclick = () => liberarPortal24hPorIndice(idx);
+
+                acoes.appendChild(btnVer);
+                acoes.appendChild(btnLiberar);
+                row.appendChild(acoes);
+                box.appendChild(row);
+            });
+        }
+
+        function abrirModalRecibo(item, idx) {
+            document.getElementById('modal-recibo-titulo').textContent = (item.nome || 'Candidato') + ' (+244 ' + item.tel + ')';
+            const cont = document.getElementById('modal-recibo-conteudo');
+            cont.innerHTML = '';
+
+            if (item.dadosUrl && item.dadosUrl.startsWith('data:image')) {
+                const img = document.createElement('img');
+                img.src = item.dadosUrl;
+                img.alt = 'Recibo enviado';
+                img.className = 'max-w-full max-h-80 rounded-lg shadow';
+                cont.appendChild(img);
+            } else if (item.dadosUrl && item.dadosUrl.startsWith('data:application/pdf')) {
+                const emb = document.createElement('iframe');
+                emb.src = item.dadosUrl;
+                emb.className = 'w-full h-80 rounded-lg border';
+                cont.appendChild(emb);
+            } else {
+                cont.innerHTML = '<div class="p-6 text-center text-xs text-slate-600">Ficheiro anexado: <strong>' + item.ficheiro + '</strong></div>';
+            }
+
+            const btnLib = document.getElementById('btn-modal-liberar-recibo');
+            btnLib.onclick = () => {
+                fecharModalRecibo();
+                liberarPortal24hPorIndice(idx);
+            };
+            document.getElementById('modal-ver-recibo').classList.remove('hidden');
+        }
+
+        function fecharModalRecibo() {
+            document.getElementById('modal-ver-recibo').classList.add('hidden');
+        }
+
+        function liberarPortal24hPorIndice(idx) {
+            const lista = JSON.parse(localStorage.getItem('minint_recibos_24h') || '[]');
+            const item = lista[idx];
+            if (!item) return;
+            localStorage.setItem('portal_24h_' + item.tel, String(Date.now() + 24 * 60 * 60 * 1000));
+            lista.splice(idx, 1);
+            localStorage.setItem('minint_recibos_24h', JSON.stringify(lista));
+            renderizarRecibos24hAdmin();
+            mostrarToast('Foi liberado o portal por 24h para +244 ' + item.tel + '!', true);
+        }
+
+        function embaralharFisherYates(arr) {
+            const copia = arr.slice();
+            for (let i = copia.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                const temp = copia[i];
+                copia[i] = copia[j];
+                copia[j] = temp;
+            }
+            return copia;
+        }
+
+        function clonarEEmbaralharAlternativas(questao) {
+            const indices = [0, 1, 2, 3];
+            const baralhados = embaralharFisherYates(indices);
+            return {
+                q: questao.q,
+                o: baralhados.map(idx => questao.o[idx]),
+                c: baralhados.indexOf(questao.c),
+                exp: questao.exp
+            };
+        }
+
+        function abrirPainelSimulado() {
+            document.getElementById('painel-nome-cand').textContent = estado.nome;
+            document.getElementById('badge-carreira').textContent = 'Carreira: ' + estado.carreira;
+            const badge = document.getElementById('badge-conta');
+            const entraram = Number(localStorage.getItem('ref_entraram_' + estado.tel) || 0);
+            const pagaram = Number(localStorage.getItem('ref_pagaram_' + estado.tel) || 0);
+            document.getElementById('painel-status-indicacao').textContent = 'Convites: ' + entraram + '/3 entraram • ' + pagaram + '/3 pagaram VIP';
+
+            const exp24 = Number(localStorage.getItem('portal_24h_' + estado.tel) || 0);
+
+            if (estado.vip) {
+                badge.textContent = 'VIP Ativo';
+                badge.className = 'bg-emerald-500 text-white text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full';
+            } else if (exp24 > Date.now()) {
+                badge.textContent = 'Diário 24h Ativo';
+                badge.className = 'bg-emerald-500 text-white text-[10px] uppercase font-bold px-2.5 py-0.5 rounded-full';
+            } else if (localStorage.getItem('extra_gratis_' + estado.tel) === 'true') {
+                badge.textContent = '+1 Teste Grátis (3 Amigos)';
+                badge.className = 'bg-emerald-400 text-minintNavy text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full';
+            } else {
+                badge.textContent = '1.º Teste Grátis';
+                badge.className = 'bg-amber-400 text-minintNavy text-[10px] uppercase font-extrabold px-2.5 py-0.5 rounded-full';
+            }
+            esconderTudo();
+            document.getElementById('view-painel-simulado').classList.remove('hidden');
+        }
+
+        function terminarSessao() {
+            if (estado.timer) clearInterval(estado.timer);
+            if (estado.timer60s) clearInterval(estado.timer60s);
+            irPara('inicio');
+        }
+
+        function comecarSimulado() {
+            const jaFezGratis = localStorage.getItem('gratis_feito_' + estado.tel) === 'true';
+            const temExtra = localStorage.getItem('extra_gratis_' + estado.tel) === 'true';
+
+            if (!usuarioTemAcessoLivre() && jaFezGratis && !temExtra) {
+                mostrarToast('O acesso gratuito já foi usado. Partilhe com 3 amigos ou ative o VIP.');
+                return;
+            }
+
+            const nivel = document.getElementById('sel-nivel').value;
+            const qtd = parseInt(document.getElementById('sel-qtd').value, 10);
+
+            const chavesTemas = ['historia', 'politica', 'admin', 'minint', 'patriotismo'];
+            const chaveHist = 'hist_q_' + (estado.tel || 'global') + '_' + nivel;
+            let usadasAntes = [];
+            try { usadasAntes = JSON.parse(localStorage.getItem(chaveHist) || '[]'); } catch (e) {}
+
+            const poolsPorTema = chavesTemas.map(tema => {
+                const itensTema = BANCO_POR_TEMA[tema] || [];
+                const novas = itensTema.filter(it => !usadasAntes.includes(it.q));
+                const antigas = itensTema.filter(it => usadasAntes.includes(it.q));
+                const ordenadas = embaralharFisherYates(novas).concat(embaralharFisherYates(antigas));
+                return ordenadas.length > 0 ? ordenadas : embaralharFisherYates(itensTema);
+            });
+
+            const selecionadas = [];
+            const ponteiros = [0, 0, 0, 0, 0];
+            for (let i = 0; i < qtd; i++) {
+                const tIdx = i % chavesTemas.length;
+                const pool = poolsPorTema[tIdx];
+                const baseQ = pool[ponteiros[tIdx] % pool.length];
+                ponteiros[tIdx]++;
+                selecionadas.push(clonarEEmbaralharAlternativas(baseQ));
+            }
+
+            const finalEmbaralhadas = embaralharFisherYates(selecionadas);
+            const novoHist = Array.from(new Set(usadasAntes.concat(finalEmbaralhadas.map(x => x.q)))).slice(-35);
+            localStorage.setItem(chaveHist, JSON.stringify(novoHist));
+
+            estado.questoes = finalEmbaralhadas;
+            estado.indiceQ = 0;
+            estado.respostas = {};
+            estado.segundos = (qtd === 20 ? 15 : (qtd === 40 ? 30 : 45)) * 60;
+
+            document.getElementById('exame-subtitulo').textContent = estado.carreira + ' • Nível ' + nivel + ' • 5 Temas';
+            esconderTudo();
+            document.getElementById('view-exame').classList.remove('hidden');
+            renderizarQuestaoExame();
+
+            clearInterval(estado.timer);
+            estado.timer = setInterval(() => {
+                estado.segundos--;
+                const m = String(Math.floor(estado.segundos / 60)).padStart(2, '0');
+                const s = String(estado.segundos % 60).padStart(2, '0');
+                document.getElementById('exame-relogio').textContent = m + ':' + s;
+                if (estado.segundos <= 0) concluirExame();
+            }, 1000);
+        }
+
+        function renderizarQuestaoExame() {
+            const q = estado.questoes[estado.indiceQ];
+            document.getElementById('exame-contador-q').textContent = 'Questão ' + (estado.indiceQ + 1) + ' de ' + estado.questoes.length;
+            document.getElementById('exame-enunciado').textContent = (estado.indiceQ + 1) + '. ' + q.q;
+
+            const letras = ['A', 'B', 'C', 'D'];
+            const box = document.getElementById('exame-alternativas');
+            box.innerHTML = '';
+
+            q.o.forEach((op, idx) => {
+                const marcada = estado.respostas[estado.indiceQ] === idx;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = marcada
+                    ? 'w-full text-left p-3.5 rounded-xl border-2 border-black bg-black text-white text-xs font-extrabold flex items-center space-x-3 shadow-md'
+                    : 'w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs flex items-center space-x-3';
+                btn.innerHTML = '<span class="w-6 h-6 rounded-full border ' + (marcada ? 'border-white bg-white text-black' : 'border-slate-300') + ' flex items-center justify-center font-bold shrink-0">' + letras[idx] + '</span><span>' + op + '</span>';
+                btn.onclick = () => {
+                    estado.respostas[estado.indiceQ] = idx;
+                    renderizarQuestaoExame();
+                };
+                box.appendChild(btn);
+            });
+        }
+
+        function mudarQuestao(delta) {
+            const prox = estado.indiceQ + delta;
+            if (prox >= 0 && prox < estado.questoes.length) {
+                estado.indiceQ = prox;
+                renderizarQuestaoExame();
+            }
+        }
+
+        function concluirExame() {
+            if (estado.timer) clearInterval(estado.timer);
+            let acertos = 0;
+            const det = document.getElementById('res-detalhes');
+            det.innerHTML = '';
+
+            estado.questoes.forEach((q, idx) => {
+                const resp = estado.respostas[idx];
+                const ok = resp === q.c;
+                if (ok) acertos++;
+                const div = document.createElement('div');
+                div.className = 'p-3 rounded-xl border text-xs ' + (ok ? 'border-emerald-200 bg-emerald-50/50' : 'border-red-200 bg-red-50/50');
+                div.innerHTML = '<div class="font-bold text-slate-900">' + (idx + 1) + '. ' + q.q + '</div>' +
+                    '<div class="mt-1 font-semibold">Correta: ' + q.o[q.c] + '</div>' +
+                    '<div class="text-slate-600 mt-0.5">' + q.exp + '</div>';
+                det.appendChild(div);
+            });
+
+            const media = Number(((acertos / estado.questoes.length) * 20).toFixed(1));
+            document.getElementById('res-sub').textContent = estado.nome + ' • ' + estado.carreira;
+            document.getElementById('res-media').textContent = media.toFixed(1);
+            document.getElementById('res-acertos').textContent = acertos + '/' + estado.questoes.length;
+            const est = document.getElementById('res-estado');
+            est.textContent = media >= 10 ? 'APTO' : 'NÃO APTO';
+            est.className = 'text-lg font-extrabold ' + (media >= 10 ? 'text-emerald-600' : 'text-minintRed');
+
+            esconderTudo();
+            document.getElementById('view-resultado').classList.remove('hidden');
+
+            const avisoFim = document.getElementById('aviso-fim-gratuito');
+            if (!usuarioTemAcessoLivre() && estado.tel) {
+                if (localStorage.getItem('gratis_feito_' + estado.tel) === 'true') {
+                    localStorage.removeItem('extra_gratis_' + estado.tel);
+                }
+                localStorage.setItem('gratis_feito_' + estado.tel, 'true');
+                avisoFim.classList.remove('hidden');
+                let seg = 60;
+                document.getElementById('contagem-regressiva').textContent = seg + 's';
+                clearInterval(estado.timer60s);
+                estado.timer60s = setInterval(() => {
+                    seg--;
+                    document.getElementById('contagem-regressiva').textContent = seg + 's';
+                    if (seg <= 0) {
+                        clearInterval(estado.timer60s);
+                        irPara('partilhar');
+                    }
+                }, 1000);
+            } else {
+                avisoFim.classList.add('hidden');
+            }
+        }
+
+        function renderizarTopicos() {
+            const grid = document.getElementById('grid-topicos');
+            grid.innerHTML = '';
+            Object.keys(DISCIPLINAS_ESTUDO).forEach(chave => {
+                const item = DISCIPLINAS_ESTUDO[chave];
+                const card = document.createElement('div');
+                card.className = 'bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between space-y-4 interactive-card';
+                card.innerHTML = '<div><span class="text-[10px] font-bold text-emerald-700 uppercase">' + item.qtdTotal + ' Perguntas</span>' +
+                    '<h3 class="text-sm font-extrabold text-minintNavy mt-1">' + item.nome + '</h3></div>';
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full bg-minintNavy hover:bg-minintBlue text-white py-2.5 rounded-xl text-xs font-bold';
+                btn.textContent = 'Praticar Tema';
+                btn.onclick = () => abrirEstudoDisciplina(chave);
+                card.appendChild(btn);
+                grid.appendChild(card);
+            });
+        }
+
+        function abrirEstudoDisciplina(chave) {
+            estado.discAtual = DISCIPLINAS_ESTUDO[chave];
+            estado.indiceEstudo = 0;
+            estado.opcaoEstudoSelecionada = null;
+            esconderTudo();
+            document.getElementById('view-estudo-disc').classList.remove('hidden');
+            renderizarPerguntaEstudo();
+        }
+
+        function renderizarPerguntaEstudo() {
+            const d = estado.discAtual;
+            const q = d.itens[estado.indiceEstudo % d.itens.length];
+            document.getElementById('estudo-disc-nome').textContent = d.nome;
+            document.getElementById('estudo-disc-prog').textContent = 'Pergunta ' + ((estado.indiceEstudo % d.itens.length) + 1) + ' de ' + d.qtdTotal;
+            document.getElementById('estudo-disc-pergunta').textContent = q.q;
+            const expBox = document.getElementById('estudo-disc-explicacao');
+
+            if (estado.opcaoEstudoSelecionada === null) {
+                expBox.classList.add('hidden');
+            }
+
+            const letras = ['A', 'B', 'C', 'D'];
+            const box = document.getElementById('estudo-disc-opcoes');
+            box.innerHTML = '';
+            q.o.forEach((op, idx) => {
+                const selecionada = estado.opcaoEstudoSelecionada === idx;
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = selecionada
+                    ? 'w-full text-left p-3.5 rounded-xl border-2 border-black bg-black text-white text-xs font-extrabold flex items-center space-x-3 shadow-md'
+                    : 'w-full text-left p-3.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-800 text-xs flex items-center space-x-3';
+                btn.innerHTML = '<span class="w-6 h-6 rounded-full border ' + (selecionada ? 'border-white bg-white text-black' : 'border-slate-300') + ' flex items-center justify-center font-bold shrink-0">' + letras[idx] + '</span><span>' + op + '</span>';
+                btn.onclick = () => {
+                    estado.opcaoEstudoSelecionada = idx;
+                    renderizarPerguntaEstudo();
+                    const expEl = document.getElementById('estudo-disc-explicacao');
+                    expEl.classList.remove('hidden');
+                    if (idx === q.c) {
+                        expEl.className = 'p-4 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 text-xs';
+                        expEl.textContent = 'Correta! ' + q.exp;
+                    } else {
+                        expEl.className = 'p-4 rounded-xl border border-red-200 bg-red-50 text-red-900 text-xs';
+                        expEl.textContent = 'Incorreta. Resposta certa: ' + q.o[q.c] + '. ' + q.exp;
+                    }
+                };
+                box.appendChild(btn);
+            });
+        }
+
+        function navegarEstudo(delta) {
+            estado.indiceEstudo = Math.max(0, estado.indiceEstudo + delta);
+            estado.opcaoEstudoSelecionada = null;
+            renderizarPerguntaEstudo();
+        }
+
+        function renderizarGlossario() {
+            const termo = (document.getElementById('busca-glossario').value || '').toLowerCase();
+            const lista = document.getElementById('lista-glossario');
+            lista.innerHTML = '';
+            GLOSSARIO_ITENS
+                .filter(g => g.termo.toLowerCase().includes(termo) || g.def.toLowerCase().includes(termo))
+                .forEach(g => {
+                    const div = document.createElement('div');
+                    div.className = 'bg-white p-4 rounded-2xl border border-slate-200 shadow-sm space-y-1 interactive-card';
+                    div.innerHTML = '<div class="text-sm font-extrabold text-minintNavy">' + g.termo + '</div>' +
+                        '<div class="text-xs text-slate-600">' + g.def + '</div>';
+                    lista.appendChild(div);
+                });
+        }
+
+        function renderizarMateriais() {
+            const lista = document.getElementById('lista-materiais');
+            lista.innerHTML = '';
+            MATERIAIS_ITENS.forEach(m => {
+                const div = document.createElement('div');
+                div.className = 'bg-white p-5 rounded-2xl border border-slate-200 shadow-sm space-y-1.5 interactive-card';
+                div.innerHTML = '<h3 class="text-sm font-extrabold text-minintNavy">' + m.titulo + '</h3>' +
+                    '<p class="text-xs text-slate-600 leading-relaxed">' + m.texto + '</p>';
+                lista.appendChild(div);
+            });
+        }
+
+        function adicionarMensagemChatSistema(texto) {
+            const hist = JSON.parse(localStorage.getItem('minint_chat_historico') || '[]');
+            hist.push({ autor: 'sistema', texto: texto, hora: new Date().toLocaleTimeString('pt-PT', { hour: '2-digit', minute: '2-digit' }) });
+            localStorage.setItem('minint_chat_historico', JSON.stringify(hist));
+        }
+
+        function renderizarMensagensChat() {
+            const box = document.getElementById('chat-mensagens');
+            if (!box) return;
+            const hist = JSON.parse(localStorage.getItem('minint_chat_historico') || '[]');
+            hist.forEach(m => {
+                if (box.querySelector('[data-chat-key="' + m.hora + m.texto.slice(0, 12) + '"]')) return;
+                const el = document.createElement('div');
+                el.setAttribute('data-chat-key', m.hora + m.texto.slice(0, 12));
+                el.className = 'bg-emerald-50 border border-emerald-200 text-emerald-950 p-3 rounded-xl max-w-[90%]';
+                el.innerHTML = '<div class="text-[10px] font-bold text-emerald-700 mb-0.5">Notificação do Sistema • ' + m.hora + '</div><div>' + m.texto + '</div>';
+                box.appendChild(el);
+            });
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function enviarMensagemChat(btnEl) {
+            const inp = document.getElementById('input-chat-msg');
+            const texto = inp.value.trim();
+            if (!texto) return;
+
+            marcarBotaoFeedback(btnEl || document.getElementById('btn-chat-enviar'), 'Enviado ✓');
+
+            const box = document.getElementById('chat-mensagens');
+            const msgCand = document.createElement('div');
+            msgCand.className = 'bg-minintNavy text-white p-3 rounded-xl max-w-[85%] ml-auto';
+            msgCand.innerHTML = '<div>' + texto + '</div><div class="text-[10px] text-emerald-300 text-right mt-1 font-bold">Enviado ✓</div>';
+            box.appendChild(msgCand);
+            inp.value = '';
+
+            setTimeout(() => {
+                const resp = document.createElement('div');
+                resp.className = 'bg-white border border-slate-200 p-3 rounded-xl max-w-[85%]';
+                resp.innerHTML = '<div class="font-bold text-minintNavy mb-1">Administrador MININT (VMI)</div>' +
+                    '<div class="text-slate-700">Mensagem recebida! O seu código gratuito ou comprovativo é tratado pelo Administrador via WhatsApp <strong>951 338 835</strong> (Express: <strong>936 813 444</strong>).</div>';
+                box.appendChild(resp);
+                box.scrollTop = box.scrollHeight;
+            }, 350);
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function obterBaseUrlPublica() {
+            const loc = window.location;
+            if (loc && loc.protocol && (loc.protocol === 'http:' || loc.protocol === 'https:')) {
+                try {
+                    const u = new URL(loc.href);
+                    u.search = '';
+                    u.hash = '';
+                    return u.toString();
+                } catch (e) {
+                    return (loc.origin + loc.pathname).split('?')[0].split('#')[0];
+                }
+            }
+            return 'https://simulador-minint-angola.ao/';
+        }
+
+        function obterUrlPartilhaValida() {
+            const telLimpo = (estado.tel || (document.getElementById('reg-tel') && document.getElementById('reg-tel').value) || '').replace(/\D/g, '');
+            try {
+                const urlObj = new URL(obterBaseUrlPublica());
+                if (telLimpo.length === 9) {
+                    urlObj.searchParams.set('ref', telLimpo);
+                }
+                return urlObj.toString();
+            } catch (e) {
+                const base = obterBaseUrlPublica();
+                return telLimpo.length === 9 ? (base + (base.includes('?') ? '&' : '?') + 'ref=' + telLimpo) : base;
+            }
+        }
+
+        function prepararLinkPartilha() {
+            const urlComRef = obterUrlPartilhaValida();
+            const campo = document.getElementById('campo-link-partilha');
+            if (campo) campo.value = urlComRef;
+
+            const telAtual = (estado.tel || '').replace(/\D/g, '');
+            if (telAtual.length === 9) {
+                const entraram = Number(localStorage.getItem('ref_entraram_' + telAtual) || 0);
+                const pagaram = Number(localStorage.getItem('ref_pagaram_' + telAtual) || 0);
+                document.getElementById('stat-amigos-entraram').textContent = Math.min(3, entraram) + ' / 3';
+                document.getElementById('stat-amigos-pagaram').textContent = Math.min(3, pagaram) + ' / 3';
+            }
+        }
+
+        function copiarTextoUniversal(texto) {
+            if (navigator.clipboard && window.isSecureContext && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(texto).catch(() => {});
+            }
+            try {
+                const ta = document.createElement('textarea');
+                ta.value = texto;
+                ta.setAttribute('readonly', '');
+                ta.style.position = 'fixed';
+                ta.style.top = '0';
+                ta.style.left = '0';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                ta.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            } catch (e) {}
+        }
+
+        function copiarLinkSeguro(btnEl) {
+            prepararLinkPartilha();
+            const val = document.getElementById('campo-link-partilha').value;
+            copiarTextoUniversal(val);
+            marcarBotaoFeedback(btnEl || document.getElementById('btn-copiar-link'), 'Copiado ✓');
+            mostrarToast('Copiado! Link pronto para Safari e Chrome.');
+        }
+
+        function partilharWhatsAppDireto() {
+            prepararLinkPartilha();
+            const val = document.getElementById('campo-link-partilha').value;
+            const mensagem = 'Prepare-se para o Concurso Público do MININT Angola no Simulador Oficial! Abra o link no Safari ou Chrome: ' + val;
+            copiarTextoUniversal(val);
+
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Simulador Oficial MININT Angola',
+                    text: 'Prepare-se para o Concurso Público do MININT Angola no Simulador Oficial!',
+                    url: val
+                }).catch(() => {
+                    const waUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(mensagem);
+                    const win = window.open(waUrl, '_blank', 'noopener,noreferrer');
+                    if (!win) window.location.href = waUrl;
+                });
+                return;
+            }
+
+            const waUrl = 'https://api.whatsapp.com/send?text=' + encodeURIComponent(mensagem);
+            const win = window.open(waUrl, '_blank', 'noopener,noreferrer');
+            if (!win) {
+                window.location.href = waUrl;
+            }
+        }
+
+        function copiarExpress(btnEl) {
+            copiarTextoUniversal('936813444');
+            marcarBotaoFeedback(btnEl || document.getElementById('btn-copiar-express'), 'Copiado ✓');
+            mostrarToast('Copiado! Número Express: 936 813 444');
+        }
+
+        function abrirWhatsAppSuporte() {
+            const texto = encodeURIComponent('Saudações VMI! Pretendo ativar o acesso VIP no Simulador MININT Angola (' + formatarKz(getValorVip()) + ' - Express 936 813 444).');
+            const url = 'https://api.whatsapp.com/send?phone=244951338835&text=' + texto;
+            const win = window.open(url, '_blank');
+            if (!win) window.location.href = url;
+        }
+
+        function abrirModalSuporte() {
+            document.getElementById('modal-suporte').classList.remove('hidden');
+        }
+
+        function fecharModalSuporte() {
+            document.getElementById('modal-suporte').classList.add('hidden');
+        }
+
+        function gerarCodigoVip() {
+            if (!estado.adminAutenticado) return;
+            const tel = document.getElementById('admin-tel').value.replace(/\D/g, '');
+            if (tel.length !== 9) {
+                mostrarToast('Digite um número de WhatsApp com 9 dígitos.');
+                return;
+            }
+            const chave = 'MININT-' + tel.slice(-4) + '-2026';
+            localStorage.setItem('vip_' + tel, 'true');
+            const box = document.getElementById('admin-chave-resultado');
+            box.classList.remove('hidden');
+            box.textContent = 'Chave VIP para +244 ' + tel + ': ' + chave;
+        }
+
+        function adminDesbloquearConsultas() {
+            if (!estado.adminAutenticado) return;
+            const tel = document.getElementById('admin-tel-desbloqueio').value.replace(/\D/g, '');
+            if (tel.length !== 9) {
+                mostrarToast('Digite o WhatsApp do candidato (9 dígitos).');
+                return;
+            }
+            localStorage.setItem('consultas_desbloqueadas_' + tel, 'true');
+            mostrarToast('Tópicos, Glossário e Materiais desbloqueados para +244 ' + tel + '!');
+        }
+
+        function atualizarValorVipAdmin() {
+            if (!estado.adminAutenticado) return;
+            const novoVal = Number(document.getElementById('admin-valor-vip').value);
+            if (!novoVal || novoVal < 100) {
+                mostrarToast('Introduza um valor válido.');
+                return;
+            }
+            localStorage.setItem('minint_valor_vip', String(novoVal));
+            atualizarTextosValorVip();
+            mostrarToast('Valor VIP atualizado para ' + formatarKz(novoVal) + '.');
+        }
+
+        function trocarBannerPermanente(ev) {
+            if (!estado.adminAutenticado) return;
+            const file = ev.target.files && ev.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                localStorage.setItem('minint_banner_fixo', e.target.result);
+                document.getElementById('img-banner-oficial').src = e.target.result;
+                mostrarToast('Fotografia do banner atualizada.');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function processarParametroIndicacao() {
+            try {
+                let ref = '';
+                try {
+                    const u = new URL(window.location.href);
+                    ref = (u.searchParams.get('ref') || u.searchParams.get('convite') || u.searchParams.get('indicador') || '').replace(/\D/g, '');
+                } catch (e) {
+                    const params = new URLSearchParams(window.location.search || '');
+                    ref = (params.get('ref') || '').replace(/\D/g, '');
+                }
+                if (!ref) {
+                    const hashLimpo = (window.location.hash || '').replace(/^#/, '');
+                    const matchHash = hashLimpo.match(/(?:^|&)ref=([0-9]{9})(?:&|$)/);
+                    if (matchHash && matchHash[1]) ref = matchHash[1];
+                }
+                if (ref.length === 9) {
+                    estado.indicadoPor = ref;
+                    document.getElementById('banner-indicacao-recebida').classList.remove('hidden');
+                    document.getElementById('indicador-tel-label').textContent = '+244 ' + ref;
+                }
+            } catch (e) {}
+        }
+
+        window.addEventListener('hashchange', processarParametroIndicacao);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const brasao = document.getElementById('brasao-secreto');
+            if (brasao) {
+                brasao.addEventListener('pointerdown', registarToqueBrasao);
+            }
+
+            const bannerSalvo = localStorage.getItem('minint_banner_fixo');
+            if (bannerSalvo) document.getElementById('img-banner-oficial').src = bannerSalvo;
+
+            atualizarTextosValorVip();
+            ultimoTotalPedidosConhecido = obterPedidosCodigo().length;
+            atualizarBadgeBrasao();
+
+            processarParametroIndicacao();
+            prepararLinkPartilha();
+            irPara('inicio');
+        });
+    </script>
+</body>
+</html>
